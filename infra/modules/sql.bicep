@@ -15,9 +15,11 @@ param appServicePrincipalId string
 // should be granted via a post-deployment script or azd hook.
 var sqlDbContributorRoleId = '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
 
+var uniqueSuffix = substring(uniqueString(resourceGroup().id), 0, 6)
+
 // ── SQL Server ─────────────────────────────────────────────────────────────
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
-  name: 'sql-${environmentName}'
+  name: 'sql-${environmentName}-${uniqueSuffix}'
   location: location
   properties: {
     // AAD-only authentication — no SQL auth password

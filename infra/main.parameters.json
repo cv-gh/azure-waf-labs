@@ -7,6 +7,9 @@
     },
     "location": {
       "value": "${AZURE_LOCATION}"
+    },
+    "sqlAadAdminObjectId": {
+      "value": "${SQL_AAD_ADMIN_OBJECT_ID}"
     }
   }
 }
