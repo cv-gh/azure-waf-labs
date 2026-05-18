@@ -14,7 +14,7 @@ permalink: /
 ![Azure](https://img.shields.io/badge/Azure-App_Gateway-0078d4?style=flat-square&logo=microsoftazure&logoColor=white)
 ![WAF](https://img.shields.io/badge/WAF-DRS_2.1-ff5722?style=flat-square)
 ![azd](https://img.shields.io/badge/azd-ready-5c2d91?style=flat-square)
-![Labs](https://img.shields.io/badge/Labs-5_parts-3f51b5?style=flat-square)
+![Labs](https://img.shields.io/badge/Labs-6_parts-3f51b5?style=flat-square)
 
 </div>
 </div>
@@ -84,6 +84,13 @@ Internet
 <div class="desc">Enable Bot Manager, simulate known-bad bots, build KQL dashboards, create an alert rule, and wire WAF logs to Microsoft Sentinel.</div>
 <div class="tags"><span class="tag">Bot Manager</span> <span class="tag">Sentinel</span> <span class="tag">Azure Monitor</span> <span class="tag">KQL</span></div>
 </a>
+
+<a class="lab-card" href="{{ '/labs/part6/' | relative_url }}">
+<div class="num">Lab 6</div>
+<div class="title">Fix the Code</div>
+<div class="desc">Eliminate False Positives at the source — fix SQLi, XSS, and path traversal in the Flask app with parameterised queries and safe escaping. WAF defense-in-depth stays fully active.</div>
+<div class="tags"><span class="tag">Secure Coding</span> <span class="tag">Parameterised SQL</span> <span class="tag">XSS Escaping</span> <span class="tag">Defense-in-Depth</span></div>
+</a>
 </div>
 
 ## Prerequisites
@@ -118,3 +125,4 @@ Every recommendation from the [MS WAF best practices page](https://learn.microso
 | Geo-filter traffic | Lab 4 |
 | Add diagnostic settings → Log Analytics | Lab 1 |
 | Send logs to Microsoft Sentinel | Lab 5 |
+| Fix code vulnerabilities (no Rule Exclusion needed) | Lab 6 |
