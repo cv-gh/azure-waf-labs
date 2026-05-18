@@ -442,7 +442,7 @@
   },"63": {
     "doc": "Home",
     "title": "Azure Application Gateway WAFHands-On Lab",
-    "content": "Deploy a vulnerable Flask app behind Azure WAF, fire real attacks, observe True Positives and False Positives, then harden step-by-step using DRS 2.1 best practices. ![Azure](https://img.shields.io/badge/Azure-App_Gateway-0078d4?style=flat-square&amp;logo=microsoftazure&amp;logoColor=white) ![WAF](https://img.shields.io/badge/WAF-DRS_2.1-ff5722?style=flat-square) ![azd](https://img.shields.io/badge/azd-ready-5c2d91?style=flat-square) ![Labs](https://img.shields.io/badge/Labs-6_parts-3f51b5?style=flat-square) ",
+    "content": "Deploy a vulnerable Flask app behind Azure WAF, fire real attacks, observe True Positives and False Positives, then harden step-by-step using DRS 2.1 best practices. ",
     "url": "/azure-waf-labs/",
     
     "relUrl": "/"
