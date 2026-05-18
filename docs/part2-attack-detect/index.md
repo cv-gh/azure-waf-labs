@@ -1,3 +1,11 @@
+---
+layout: default
+title: Lab 2 — Attack & Detect
+parent: Labs
+nav_order: 2
+permalink: /labs/part2/
+---
+
 # Lab 2 — Attack & Detect
 
 <div class="lab-meta">
@@ -100,19 +108,23 @@ AzureDiagnostics
 | order by TimeGenerated desc
 ```
 
-!!! success "True Positives confirmed"
-    You should see rows for rule IDs **942100**, **941100**, and **930100** (plus others from the Attack Script). Each row is a True Positive — the WAF correctly identified an attack payload.
+{: .success-title }
+> ## True Positives confirmed
+>
+> You should see rows for rule IDs **942100**, **941100**, and **930100** (plus others from the Attack Script). Each row is a True Positive — the WAF correctly identified an attack payload.
+>
+> Key columns to review:
+>
+> | Column | Meaning |
+> |--------|---------|
+> | `ruleId_s` | DRS 2.1 rule that matched |
+> | `requestUri_s` | The URI + query string that triggered the rule |
+> | `clientIp_s` | Your IP address |
+> | `message_s` | Human-readable rule description |
 
-    Key columns to review:
-
-    | Column | Meaning |
-    |--------|---------|
-    | `ruleId_s` | DRS 2.1 rule that matched |
-    | `requestUri_s` | The URI + query string that triggered the rule |
-    | `clientIp_s` | Your IP address |
-    | `message_s` | Human-readable rule description |
-
-!!! warning "Detection Mode means no blocking"
-    Every one of these requests reached your Vulnerable App. The `action_s == "Detected"` value confirms the WAF *saw* the attack but did *not* stop it. This is the expected and correct behaviour for Detection Mode.
-
-    In **Lab 3** you will switch to Prevention Mode — after which these same payloads will return **HTTP 403 Forbidden** before they reach the application.
+{: .warning-title }
+> ## Detection Mode means no blocking
+>
+> Every one of these requests reached your Vulnerable App. The `action_s == "Detected"` value confirms the WAF *saw* the attack but did *not* stop it. This is the expected and correct behaviour for Detection Mode.
+>
+> In **Lab 3** you will switch to Prevention Mode — after which these same payloads will return **HTTP 403 Forbidden** before they reach the application.

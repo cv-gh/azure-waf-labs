@@ -1,0 +1,55 @@
+<link rel="icon" type="image/svg+xml" href="{{ '/docs/assets/shield.svg' | relative_url }}">
+<style>
+/* ── Hero ─────────────────────────────────────────────────────── */
+.hero { text-align: center; padding: 2.5rem 0 2rem; }
+.hero-title {
+  font-size: 2rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.75rem;
+}
+.hero-sub {
+  font-size: 1.05rem; max-width: 580px; margin: 0 auto 1.5rem;
+  line-height: 1.6; opacity: 0.8;
+}
+.hero-badges {
+  display: flex; gap: 0.5rem; justify-content: center;
+  flex-wrap: wrap; margin-bottom: 2rem;
+}
+
+/* ── Lab card grid ────────────────────────────────────────────── */
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 1rem; margin: 1.5rem 0;
+}
+.lab-card {
+  border: 1px solid rgba(128,128,128,0.22);
+  border-radius: 6px; padding: 1rem 1.25rem;
+  text-decoration: none !important; display: block;
+  transition: border-color 0.15s, background 0.15s;
+}
+.lab-card:hover {
+  border-color: var(--link-color, #9bb0ff);
+  background: rgba(155, 176, 255, 0.06);
+}
+.lab-card .num {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--link-color, #9bb0ff);
+  margin-bottom: 0.3rem;
+}
+.lab-card .title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+.lab-card .desc  { font-size: 0.8rem; line-height: 1.5; margin-bottom: 0.6rem; opacity: 0.7; }
+.lab-card .tags  { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.tag {
+  font-size: 0.65rem; padding: 0.1rem 0.45rem; border-radius: 100px;
+  border: 1px solid rgba(155, 176, 255, 0.35); opacity: 0.85;
+}
+
+/* ── Lab metadata bar ─────────────────────────────────────────── */
+.lab-meta {
+  display: flex; gap: 1.25rem; flex-wrap: wrap;
+  padding: 0.6rem 1rem; margin-bottom: 1.5rem; font-size: 0.83rem;
+  border-radius: 6px; border: 1px solid rgba(128,128,128,0.22);
+  background: rgba(128,128,128,0.06);
+}
+.lab-meta__item { opacity: 0.75; }
+.lab-meta__item strong { opacity: 1; font-weight: 600; }
+</style>

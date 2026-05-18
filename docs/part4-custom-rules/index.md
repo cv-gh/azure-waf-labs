@@ -1,3 +1,11 @@
+---
+layout: default
+title: Lab 4 — Custom Rules
+parent: Labs
+nav_order: 4
+permalink: /labs/part4/
+---
+
 # Lab 4 — Custom Rules
 
 <div class="lab-meta">
@@ -192,7 +200,9 @@ AzureDiagnostics
 
 The `userDefinedRuleName_s` column will show `BlockAdminByIP`, `RateLimitLogin`, or `GeoFilter` — confirming which Custom Rule fired.
 
-!!! tip "Custom Rule priority order matters"
-    Custom Rules are evaluated in ascending priority order. Priority **10** (BlockAdminByIP) is evaluated before priority **20** (RateLimitLogin) and priority **30** (GeoFilter). If a request to `/admin` from a blocked IP matches BlockAdminByIP at priority 10, it is blocked immediately — the rate limit and geo rules never run.
-
-    Reserve priorities 1–99 for Custom Rules, leaving headroom for future rules between existing ones.
+{: .tip-title }
+> ## Custom Rule priority order matters
+>
+> Custom Rules are evaluated in ascending priority order. Priority **10** (BlockAdminByIP) is evaluated before priority **20** (RateLimitLogin) and priority **30** (GeoFilter). If a request to `/admin` from a blocked IP matches BlockAdminByIP at priority 10, it is blocked immediately — the rate limit and geo rules never run.
+>
+> Reserve priorities 1–99 for Custom Rules, leaving headroom for future rules between existing ones.

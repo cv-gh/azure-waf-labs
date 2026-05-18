@@ -1,3 +1,11 @@
+---
+layout: default
+title: Lab 1 — Deploy & Baseline
+parent: Labs
+nav_order: 1
+permalink: /labs/part1/
+---
+
 # Lab 1 — Deploy & Baseline
 
 <div class="lab-meta">
@@ -56,12 +64,14 @@ Expected output:
 "Detection"
 ```
 
-!!! tip "Detection Mode vs Prevention Mode"
-    In **Detection Mode**, the WAF inspects every request and writes a log entry for any rule that matches — but **never blocks** a request. All traffic passes through regardless of what rules fire.
-
-    In **Prevention Mode** (enabled in Lab 3), a rule match causes the WAF to return **HTTP 403 Forbidden** and stop the request from reaching your application.
-
-    Always start in Detection Mode so you can observe what the WAF would block *before* you commit to blocking it. This prevents unexpected False Positives from disrupting legitimate traffic.
+{: .tip-title }
+> ## Detection Mode vs Prevention Mode
+>
+> In **Detection Mode**, the WAF inspects every request and writes a log entry for any rule that matches — but **never blocks** a request. All traffic passes through regardless of what rules fire.
+>
+> In **Prevention Mode** (enabled in Lab 3), a rule match causes the WAF to return **HTTP 403 Forbidden** and stop the request from reaching your application.
+>
+> Always start in Detection Mode so you can observe what the WAF would block *before* you commit to blocking it. This prevents unexpected False Positives from disrupting legitimate traffic.
 
 ---
 
@@ -83,5 +93,7 @@ The table may be empty at this stage — that is expected. WAF log entries will 
 
 ---
 
-!!! info "No attacks yet — establish your baseline"
-    This lab establishes your baseline. The Vulnerable App is running, the WAF is in Detection Mode, and logs are flowing to Log Analytics. In **Lab 2** you will fire real attack payloads and observe them in these logs as True Positives.
+{: .note-title }
+> ## No attacks yet — establish your baseline
+>
+> This lab establishes your baseline. The Vulnerable App is running, the WAF is in Detection Mode, and logs are flowing to Log Analytics. In **Lab 2** you will fire real attack payloads and observe them in these logs as True Positives.

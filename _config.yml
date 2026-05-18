@@ -1,0 +1,57 @@
+title: Azure WAF Lab
+description: Hands-on labs for Azure Application Gateway WAF — deploy, attack, detect, tune, and harden
+baseurl: /azure-waf-labs
+url: https://cv-gh.github.io
+remote_theme: just-the-docs/just-the-docs@v0.10.0
+
+color_scheme: dark
+
+search_enabled: true
+heading_anchors: true
+nav_sort: order
+enable_copy_code_button: true
+back_to_top: true
+back_to_top_text: "↑ Back to top"
+
+callouts_level: quiet
+callouts:
+  warning:
+    title: Warning
+    color: yellow
+  note:
+    title: Note
+    color: blue
+  tip:
+    title: Tip
+    color: purple
+  success:
+    title: Success
+    color: green
+
+aux_links:
+  "GitHub ↗":
+    - "https://github.com/cv-gh/azure-waf-labs"
+aux_links_new_tab: true
+
+footer_content: "Azure WAF Lab &middot; <a href='https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices'>MS WAF Best Practices</a>"
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - "*.py"
+  - "*.sh"
+  - "src/"
+  - "infra/"
+  - ".agents/"
+  - "scripts/"
+  - "tests/"
+  - "mkdocs.yml"
+  - "azure.yaml"
+  - "pytest.ini"
+  - "skills-lock.json"
+  - "CONTEXT.md"
+  - "Gemfile.lock"
+  - ".pytest_cache/"

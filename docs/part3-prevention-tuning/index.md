@@ -1,3 +1,11 @@
+---
+layout: default
+title: Lab 3 — Prevention & Tuning
+parent: Labs
+nav_order: 3
+permalink: /labs/part3/
+---
+
 # Lab 3 — Prevention & Tuning
 
 <div class="lab-meta">
@@ -8,8 +16,8 @@
 
 Switch the WAF Policy to Prevention Mode, confirm attack payloads are now blocked (True Positives), deliberately trigger a False Positive with a legitimate search containing an apostrophe, then add a scoped Rule Exclusion to resolve it without disabling the SQLi rule.
 
-!!! tip "Most important lab"
-    Rule Exclusion Tuning is the core skill of WAF operations. This lab covers it end-to-end.
+{: .tip }
+> Rule Exclusion Tuning is the core skill of WAF operations. This lab covers it end-to-end.
 
 ---
 
@@ -43,15 +51,18 @@ curl -v "$APPGW_URL/search?q=' OR 1=1--"
 # Expected: HTTP/1.1 403 Forbidden
 ```
 
-!!! success "True Positive"
-    The WAF correctly blocked the SQL injection attack. The Vulnerable App never saw the request. This is a **True Positive** — the WAF fired, and it was right.
-
-    The response body will contain:
-    ```
-    <html><head><title>403 Forbidden</title></head>
-    <body>The server is temporarily unable to service your request. Please try again later.</body>
-    </html>
-    ```
+{: .success-title }
+> ## True Positive
+>
+> The WAF correctly blocked the SQL injection attack. The Vulnerable App never saw the request. This is a **True Positive** — the WAF fired, and it was right.
+>
+> The response body will contain:
+>
+> ```
+> <html><head><title>403 Forbidden</title></head>
+> <body>The server is temporarily unable to service your request. Please try again later.</body>
+> </html>
+> ```
 
 ---
 
@@ -64,14 +75,16 @@ curl -v "$APPGW_URL/search?q=O'Brien"
 # Expected: HTTP/1.1 403 Forbidden — but this is a LEGITIMATE search!
 ```
 
-!!! warning "False Positive"
-    Rule **942100** matched the apostrophe in `O'Brien` as a SQL injection character. This is a **False Positive** — a legitimate request that was incorrectly blocked by the WAF.
-
-    Your application sells products with apostrophes in their names (e.g. "O'Brien Wakeboard"). Without Tuning, every customer searching for this product gets a 403 error. The WAF has introduced a regression in application functionality.
-
-    **The wrong fix** is to disable rule 942100 entirely — that would leave you exposed to real SQLi attacks.
-
-    **The right fix** is a scoped Rule Exclusion.
+{: .warning-title }
+> ## False Positive
+>
+> Rule **942100** matched the apostrophe in `O'Brien` as a SQL injection character. This is a **False Positive** — a legitimate request that was incorrectly blocked by the WAF.
+>
+> Your application sells products with apostrophes in their names (e.g. "O'Brien Wakeboard"). Without Tuning, every customer searching for this product gets a 403 error. The WAF has introduced a regression in application functionality.
+>
+> **The wrong fix** is to disable rule 942100 entirely — that would leave you exposed to real SQLi attacks.
+>
+> **The right fix** is a scoped Rule Exclusion.
 
 ### Step 4 — Confirm rule 942100 fired for the FP
 
@@ -132,34 +145,39 @@ curl -v "$APPGW_URL/search?q=' OR 1=1--"
 # Expected: HTTP/1.1 403 Forbidden — attack still blocked
 ```
 
-!!! success "Tuning complete"
-    - `O'Brien` → **200 OK** — False Positive eliminated ✓
-    - `' OR 1=1--` → **403 Forbidden** — True Positive preserved ✓
+{: .success-title }
+> ## Tuning complete
+>
+> - `O'Brien` → **200 OK** — False Positive eliminated ✓
+> - `' OR 1=1--` → **403 Forbidden** — True Positive preserved ✓
+>
+> Rule 942100 is still active for all other parameters and locations. You have resolved the FP with surgical precision.
 
-    Rule 942100 is still active for all other parameters and locations. You have resolved the FP with surgical precision.
-
-!!! tip "WAF as Code"
-    In production, define Rule Exclusions in your Bicep modules so they are version-controlled, code-reviewed, and survive DRS ruleset upgrades. See **ADR-0001** in `docs/adr/` for the rationale for using DRS 2.1 instead of OWASP CRS 3.2, and the Bicep `appgateway.bicep` module for where to add `exclusions` to the `managedRules` block.
-
-    Example Bicep exclusion:
-    ```bicep
-    exclusions: [
-      {
-        matchVariable: 'RequestArgNames'
-        selector: 'q'
-        selectorMatchOperator: 'Equals'
-        exclusionManagedRuleSets: [
-          {
-            ruleSetType: 'Microsoft_DefaultRuleSet'
-            ruleSetVersion: '2.1'
-            ruleGroups: [
-              {
-                ruleGroupName: 'SQLI'
-                rules: [ { ruleId: '942100' } ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-    ```
+{: .tip-title }
+> ## WAF as Code
+>
+> In production, define Rule Exclusions in your Bicep modules so they are version-controlled, code-reviewed, and survive DRS ruleset upgrades. See **ADR-0001** in `docs/adr/` for the rationale for using DRS 2.1 instead of OWASP CRS 3.2, and the Bicep `appgateway.bicep` module for where to add `exclusions` to the `managedRules` block.
+>
+> Example Bicep exclusion:
+>
+> ```bicep
+> exclusions: [
+>   {
+>     matchVariable: 'RequestArgNames'
+>     selector: 'q'
+>     selectorMatchOperator: 'Equals'
+>     exclusionManagedRuleSets: [
+>       {
+>         ruleSetType: 'Microsoft_DefaultRuleSet'
+>         ruleSetVersion: '2.1'
+>         ruleGroups: [
+>           {
+>             ruleGroupName: 'SQLI'
+>             rules: [ { ruleId: '942100' } ]
+>           }
+>         ]
+>       }
+>     ]
+>   }
+> ]
+> ```

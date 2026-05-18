@@ -1,3 +1,11 @@
+---
+layout: default
+title: Lab 5 — Bot & Observability
+parent: Labs
+nav_order: 5
+permalink: /labs/part5/
+---
+
 # Lab 5 — Bot Management & Observability
 
 <div class="lab-meta">
@@ -171,8 +179,10 @@ az monitor scheduled-query create \
 
 Microsoft Sentinel is a cloud-native SIEM that aggregates WAF logs alongside signals from across your Azure environment to detect coordinated attacks that span multiple services. The [WAF best practices](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices#send-logs-to-microsoft-sentinel) recommend forwarding WAF logs to Sentinel for production workloads.
 
-!!! info "Sentinel requires a separate workspace"
-    Microsoft Sentinel is enabled on top of a Log Analytics workspace. For this lab you can enable it on the **existing** Log Analytics workspace deployed by `azd up` — no new workspace needed.
+{: .note-title }
+> ## Sentinel requires a separate workspace
+>
+> Microsoft Sentinel is enabled on top of a Log Analytics workspace. For this lab you can enable it on the **existing** Log Analytics workspace deployed by `azd up` — no new workspace needed.
 
 ### Step 1 — Enable Microsoft Sentinel on the Log Analytics workspace
 
@@ -198,8 +208,8 @@ az sentinel data-connector create \
   --kind AzureWebApplicationFirewall
 ```
 
-!!! tip
-    The WAF connector ingests the same `AzureDiagnostics` table you queried in Section 3 — no new data pipelines needed. Sentinel adds incident correlation, threat intelligence enrichment, and workbook dashboards on top.
+{: .tip }
+> The WAF connector ingests the same `AzureDiagnostics` table you queried in Section 3 — no new data pipelines needed. Sentinel adds incident correlation, threat intelligence enrichment, and workbook dashboards on top.
 
 ### Step 3 — Verify ingestion in Sentinel
 
@@ -227,23 +237,25 @@ Sentinel includes a pre-built Azure WAF workbook with visualisations for blocked
 2. Search for **Azure Web Application Firewall (WAF)**.
 3. Click **Save**, then **View saved workbook**.
 
-!!! success "All MS WAF best practices covered"
-    With Sentinel connected, every recommendation from the [WAF best practices page](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices) is now demonstrated in this lab series:
-
-    | Best Practice | Lab |
-    |---|---|
-    | Enable the WAF | Lab 1 |
-    | Use WAF Policies | Lab 1 |
-    | Use Detection Mode for tuning | Labs 1–2 |
-    | Tune your WAF (Rule Exclusions) | Lab 3 |
-    | Use Prevention Mode | Lab 3 |
-    | Define WAF config as code (Bicep) | Lab 3 |
-    | Enable core rule sets (DRS 2.1) | Lab 1 |
-    | Enable bot management rules | Lab 5 |
-    | Use latest ruleset versions (DRS 2.1) | Lab 1 |
-    | Geo-filter traffic | Lab 4 |
-    | Add diagnostic settings | Lab 1 |
-    | Send logs to Microsoft Sentinel | Lab 5 ✓ |
+{: .success-title }
+> ## All MS WAF best practices covered
+>
+> With Sentinel connected, every recommendation from the [WAF best practices page](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices) is now demonstrated in this lab series:
+>
+> | Best Practice | Lab |
+> |---|---|
+> | Enable the WAF | Lab 1 |
+> | Use WAF Policies | Lab 1 |
+> | Use Detection Mode for tuning | Labs 1–2 |
+> | Tune your WAF (Rule Exclusions) | Lab 3 |
+> | Use Prevention Mode | Lab 3 |
+> | Define WAF config as code (Bicep) | Lab 3 |
+> | Enable core rule sets (DRS 2.1) | Lab 1 |
+> | Enable bot management rules | Lab 5 |
+> | Use latest ruleset versions (DRS 2.1) | Lab 1 |
+> | Geo-filter traffic | Lab 4 |
+> | Add diagnostic settings | Lab 1 |
+> | Send logs to Microsoft Sentinel | Lab 5 ✓ |
 
 ---
 
@@ -257,12 +269,14 @@ azd down
 
 `azd down` removes the entire resource group, including the Application Gateway, App Service, SQL database, Log Analytics workspace, and all associated resources. This is the recommended cleanup path — do not delete resources individually.
 
-!!! tip "Further reading"
-    To continue learning about Azure Application Gateway WAF:
-
-    - [WAF best practices — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices)
-    - [DRS 2.1 rule groups — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-crs-rulegroups-rules)
-    - [Bot Manager ruleset — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/bot-protection-overview)
-    - [WAF Tuning guide — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-waf-request-size-limits)
-    - [WAF Policy as code with Bicep — Azure samples](https://learn.microsoft.com/en-us/azure/templates/microsoft.network/applicationgatewaywebapplicationfirewallpolicies)
-    - [Using Microsoft Sentinel with Azure WAF](https://learn.microsoft.com/en-us/azure/web-application-firewall/waf-sentinel)
+{: .tip-title }
+> ## Further reading
+>
+> To continue learning about Azure Application Gateway WAF:
+>
+> - [WAF best practices — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices)
+> - [DRS 2.1 rule groups — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-crs-rulegroups-rules)
+> - [Bot Manager ruleset — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/bot-protection-overview)
+> - [WAF Tuning guide — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-waf-request-size-limits)
+> - [WAF Policy as code with Bicep — Azure samples](https://learn.microsoft.com/en-us/azure/templates/microsoft.network/applicationgatewaywebapplicationfirewallpolicies)
+> - [Using Microsoft Sentinel with Azure WAF](https://learn.microsoft.com/en-us/azure/web-application-firewall/waf-sentinel)
