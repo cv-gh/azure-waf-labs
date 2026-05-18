@@ -1,0 +1,84 @@
+@description('Environment name used as a suffix for all resources')
+param environmentName string
+
+@description('Azure region for the SQL resources')
+param location string
+
+@description('Azure AD object ID of the SQL AAD administrator')
+param sqlAadAdminObjectId string
+
+@description('Object ID of the App Service system-assigned managed identity')
+param appServicePrincipalId string
+
+// Built-in Azure RBAC role: SQL DB Contributor
+// Grants the MSI permission to connect; T-SQL db_datareader/db_datawriter
+// should be granted via a post-deployment script or azd hook.
+var sqlDbContributorRoleId = '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
+
+// ── SQL Server ─────────────────────────────────────────────────────────────
+resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
+  name: 'sql-${environmentName}'
+  location: location
+  properties: {
+    // AAD-only authentication — no SQL auth password
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      login: 'aad-admin'
+      sid: sqlAadAdminObjectId
+      tenantId: subscription().tenantId
+      azureADOnlyAuthentication: true
+    }
+    minimalTlsVersion: '1.2'
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+// Allow Azure services to reach the SQL server (required for App Service MSI)
+resource firewallAllowAzure 'Microsoft.Sql/servers/firewallRules@2023-05-01-preview' = {
+  parent: sqlServer
+  name: 'AllowAllWindowsAzureIps'
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+}
+
+// ── Database (Free serverless tier) ───────────────────────────────────────
+resource database 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
+  parent: sqlServer
+  name: 'waflab'
+  location: location
+  sku: {
+    name: 'GP_S_Gen5_1'
+    tier: 'GeneralPurpose'
+    family: 'Gen5'
+    capacity: 1
+  }
+  properties: {
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    maxSizeBytes: 34359738368
+    useFreeLimit: true
+    freeLimitExhaustionBehavior: 'AutoPause'
+    autoPauseDelay: 60
+    minCapacity: '0.5'
+    zoneRedundant: false
+  }
+}
+
+// ── RBAC: grant App Service MSI the SQL DB Contributor role ───────────────
+resource sqlRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(appServicePrincipalId)) {
+  name: guid(sqlServer.id, appServicePrincipalId, sqlDbContributorRoleId)
+  scope: sqlServer
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', sqlDbContributorRoleId)
+    principalId: appServicePrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ── Outputs ────────────────────────────────────────────────────────────────
+@description('Fully qualified domain name of the SQL server')
+output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
+
+@description('Name of the waflab database')
+output databaseName string = database.name

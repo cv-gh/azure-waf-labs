@@ -1,0 +1,112 @@
+# Lab 2 — Attack & Detect
+
+**Goal:** Fire SQLi, XSS, and path traversal attack payloads at the Vulnerable App while the WAF is in Detection Mode. Observe every hit as a **True Positive** in the Application Gateway WAF logs.
+
+---
+
+## Detection Mode behaviour
+
+In Detection Mode the WAF inspects every request and writes a log entry for each rule match, but **passes the request through to the backend unchanged**. This means:
+
+- Attacks return **HTTP 200** (the Vulnerable App responds normally).
+- The WAF log shows the matched rule ID and payload.
+- No traffic is blocked.
+
+This is intentional for Lab 2 — you want to see *which* rules fire before you activate Prevention Mode in Lab 3.
+
+---
+
+## Understanding True Positives
+
+A **True Positive (TP)** is a WAF rule match that correctly identifies a real attack. The WAF fired, and it was right to do so. In Detection Mode a TP shows up as `action_s == "Detected"` in the WAF logs.
+
+The opposite of a TP is a **False Positive (FP)** — a rule match that incorrectly flags legitimate traffic. You will encounter a deliberate FP in Lab 3.
+
+---
+
+## Step 1 — Set APPGW_URL
+
+```bash
+export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2)
+echo $APPGW_URL
+```
+
+---
+
+## Step 2 — Fire a SQL Injection attack (rule 942100)
+
+```bash
+curl -v "$APPGW_URL/search?q=' OR 1=1--"
+```
+
+**What this does:** The payload `' OR 1=1--` is a classic SQL injection string. DRS 2.1 rule **942100** (SQL Injection Attack Detected via libinjection) matches the `q` query parameter.
+
+**Expected response:** `HTTP/1.1 200 OK` — the Vulnerable App responds. Detection Mode does not block.
+
+---
+
+## Step 3 — Fire an XSS attack (rule 941100)
+
+```bash
+curl -v "$APPGW_URL/search?q=<script>alert(1)</script>"
+```
+
+**What this does:** The `<script>` tag is a canonical Cross-Site Scripting payload. DRS 2.1 rule **941100** (XSS Attack Detected via libinjection) matches.
+
+**Expected response:** `HTTP/1.1 200 OK` — passed through, logged.
+
+---
+
+## Step 4 — Fire a path traversal attack (rule 930100)
+
+```bash
+curl -v "$APPGW_URL/file?name=../../etc/passwd"
+```
+
+**What this does:** The `../` sequence attempts to traverse out of the web root. DRS 2.1 rule **930100** (Path Traversal Attack) matches.
+
+**Expected response:** `HTTP/1.1 200 OK` — passed through, logged.
+
+---
+
+## Step 5 — Run the full Attack Script
+
+The repository includes a complete Attack Script that exercises multiple rule groups:
+
+```bash
+./scripts/attack-part2.sh
+```
+
+Review the script before running it to understand every payload and which DRS 2.1 rule group it targets.
+
+---
+
+## Step 6 — Query WAF logs in Log Analytics
+
+Open the Log Analytics workspace in the portal, select **Logs**, and run:
+
+```kusto
+AzureDiagnostics
+| where ResourceType == "APPLICATIONGATEWAYS"
+| where Category == "ApplicationGatewayFirewallLog"
+| where action_s == "Detected"
+| project TimeGenerated, clientIp_s, requestUri_s, ruleId_s, message_s
+| order by TimeGenerated desc
+```
+
+!!! success "True Positives confirmed"
+    You should see rows for rule IDs **942100**, **941100**, and **930100** (plus others from the Attack Script). Each row is a True Positive — the WAF correctly identified an attack payload.
+
+    Key columns to review:
+
+    | Column | Meaning |
+    |--------|---------|
+    | `ruleId_s` | DRS 2.1 rule that matched |
+    | `requestUri_s` | The URI + query string that triggered the rule |
+    | `clientIp_s` | Your IP address |
+    | `message_s` | Human-readable rule description |
+
+!!! warning "Detection Mode means no blocking"
+    Every one of these requests reached your Vulnerable App. The `action_s == "Detected"` value confirms the WAF *saw* the attack but did *not* stop it. This is the expected and correct behaviour for Detection Mode.
+
+    In **Lab 3** you will switch to Prevention Mode — after which these same payloads will return **HTTP 403 Forbidden** before they reach the application.

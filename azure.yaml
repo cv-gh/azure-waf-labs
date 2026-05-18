@@ -1,0 +1,7 @@
+name: azure-waf-labs
+
+services:
+  app:
+    project: src/app
+    language: python
+    host: appservice
