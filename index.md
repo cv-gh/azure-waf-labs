@@ -10,12 +10,10 @@ permalink: /
 <h1 class="hero-title">Azure Application Gateway WAF<br>Hands-On Lab</h1>
 <p class="hero-sub">Deploy a vulnerable Flask app behind Azure WAF, fire real attacks, observe True Positives and False Positives, then harden step-by-step using DRS 2.1 best practices.</p>
 <div class="hero-badges">
-
-![Azure](https://img.shields.io/badge/Azure-App_Gateway-0078d4?style=flat-square&logo=microsoftazure&logoColor=white)
-![WAF](https://img.shields.io/badge/WAF-DRS_2.1-ff5722?style=flat-square)
-![azd](https://img.shields.io/badge/azd-ready-5c2d91?style=flat-square)
-![Labs](https://img.shields.io/badge/Labs-6_parts-3f51b5?style=flat-square)
-
+  <img src="https://img.shields.io/badge/Azure-App_Gateway-0078d4?style=flat-square&logo=microsoftazure&logoColor=white" alt="Azure">
+  <img src="https://img.shields.io/badge/WAF-DRS_2.1-ff5722?style=flat-square" alt="WAF">
+  <img src="https://img.shields.io/badge/azd-ready-5c2d91?style=flat-square" alt="azd">
+  <img src="https://img.shields.io/badge/Labs-6_parts-3f51b5?style=flat-square" alt="Labs">
 </div>
 </div>
 
