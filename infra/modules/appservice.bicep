@@ -34,6 +34,9 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
   name: 'app-${environmentName}-${uniqueSuffix}'
   location: location
   kind: 'app,linux'
+  tags: {
+    'azd-service-name': 'app'
+  }
   identity: {
     type: 'SystemAssigned'
   }
