@@ -37,6 +37,7 @@ footer_content: "Azure WAF Lab &middot; <a href='https://learn.microsoft.com/en-
 
 plugins:
   - jekyll-remote-theme
+  - jekyll-include-cache
   - jekyll-seo-tag
   - jekyll-sitemap
 
