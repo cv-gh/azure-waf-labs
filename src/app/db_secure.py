@@ -2,101 +2,11 @@ import os
 import struct
 import pyodbc
 
-
-def _get_connection():
-    """Create a pyodbc connection to Azure SQL using Managed Identity token auth."""
-    server = os.environ["AZURE_SQL_SERVER"]
-    database = os.environ["AZURE_SQL_DATABASE"]
-
-    if os.environ.get("AZURE_SQL_USE_MSI", "").lower() == "true":
-        import urllib.request, json
-        token_url = (
-            "http://169.254.169.254/metadata/identity/oauth2/token"
-            "?api-version=2018-02-01&resource=https://database.windows.net/"
-        )
-        req = urllib.request.Request(token_url, headers={"Metadata": "true"})
-        with urllib.request.urlopen(req) as resp:
-            token = json.loads(resp.read())["access_token"]
-
-        token_bytes = token.encode("utf-16-le")
-        token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
-
-        conn_str = (
-            f"Driver={{ODBC Driver 18 for SQL Server}};"
-            f"Server=tcp:{server},1433;"
-            f"Database={database};"
-            f"Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
-        )
-        conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
-    else:
-        conn_str = (
-            f"Driver={{ODBC Driver 18 for SQL Server}};"
-            f"Server=tcp:{server},1433;"
-            f"Database={database};"
-            f"UID={os.environ.get('AZURE_SQL_USER', 'sa')};"
-            f"PWD={os.environ['AZURE_SQL_PASSWORD']};"
-            f"Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
-        )
-        conn = pyodbc.connect(conn_str)
-
-    return conn
-
-
-def seed(conn):
-    """Create products and users tables and seed initial data if not present."""
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'products')
-        CREATE TABLE products (
-            id INT IDENTITY(1,1) PRIMARY KEY,
-            name NVARCHAR(200) NOT NULL,
-            price DECIMAL(10,2) NOT NULL,
-            description NVARCHAR(500)
-        )
-    """)
-
-    cursor.execute("SELECT COUNT(*) FROM products")
-    if cursor.fetchone()[0] == 0:
-        cursor.executemany(
-            "INSERT INTO products (name, price, description) VALUES (?, ?, ?)",
-            [
-                ("Widget Pro", 9.99, "A standard widget for everyday use"),
-                ("Gadget Elite", 19.99, "Advanced gadget with extra features"),
-                ("O'Brien Wakeboard", 249.99, "Professional wakeboard by O'Brien"),
-                ("O'Brien Life Vest", 79.99, "Safety vest by O'Brien"),
-                ("Super Donut", 2.49, "A delicious donut"),
-            ],
-        )
-
-    cursor.execute("""
-        IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'users')
-        CREATE TABLE users (
-            id INT IDENTITY(1,1) PRIMARY KEY,
-            username NVARCHAR(100) NOT NULL UNIQUE,
-            password_hash NVARCHAR(200) NOT NULL
-        )
-    """)
-
-    cursor.execute("SELECT COUNT(*) FROM users")
-    if cursor.fetchone()[0] == 0:
-        cursor.executemany(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            [("admin", "correct"), ("user1", "password123")],
-        )
-
-    conn.commit()
-    cursor.close()
+from db import _get_connection, seed
 
 
 class SqlDb:
-    """Production db — secure version with parameterised queries.
-
-    Identical to SqlDb in db.py except search_products and check_login use
-    cursor.execute(sql, params) instead of f-string SQL interpolation.
-    Parameterised queries eliminate SQL injection and resolve WAF False
-    Positives caused by apostrophes in legitimate search terms (e.g. O'Brien).
-    """
+    """Secure db — parameterised queries eliminate SQLi and WAF False Positives."""
 
     def __init__(self):
         self._conn = _get_connection()
@@ -112,8 +22,7 @@ class SqlDb:
     def search_products(self, query):
         cursor = self._conn.cursor()
         try:
-            # Parameterised query: the ? placeholder lets the database driver
-            # handle escaping. Apostrophes are treated as data, not SQL syntax.
+            # Parameterised: apostrophes are data, not SQL syntax — no SQLi, no WAF FP
             cursor.execute(
                 "SELECT id, name, price FROM products WHERE name LIKE ?",
                 [f"%{query}%"],
@@ -127,8 +36,7 @@ class SqlDb:
     def check_login(self, username, password):
         cursor = self._conn.cursor()
         try:
-            # Parameterised query: username and password are bound as values,
-            # not interpolated into SQL. Login injection (e.g. ' OR 1=1--) is impossible.
+            # Parameterised: login injection (e.g. ' OR 1=1--) is impossible
             cursor.execute(
                 "SELECT COUNT(*) FROM users WHERE username=? AND password_hash=?",
                 [username, password],
@@ -138,3 +46,4 @@ class SqlDb:
             count = 0
         cursor.close()
         return count > 0
+

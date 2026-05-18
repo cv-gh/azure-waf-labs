@@ -4,13 +4,13 @@ import pyodbc
 
 
 def _get_connection():
-    """Create a pyodbc connection to Azure SQL using Managed Identity token auth."""
+    """Create a pyodbc connection to Azure SQL using Managed Identity or SQL auth."""
     server = os.environ["AZURE_SQL_SERVER"]
     database = os.environ["AZURE_SQL_DATABASE"]
 
     if os.environ.get("AZURE_SQL_USE_MSI", "").lower() == "true":
-        # Acquire an access token from the MSI endpoint
-        import urllib.request, json
+        import urllib.request
+        import json
         token_url = (
             "http://169.254.169.254/metadata/identity/oauth2/token"
             "?api-version=2018-02-01&resource=https://database.windows.net/"
@@ -19,7 +19,6 @@ def _get_connection():
         with urllib.request.urlopen(req) as resp:
             token = json.loads(resp.read())["access_token"]
 
-        # Pack the token as the SQL Server driver expects
         token_bytes = token.encode("utf-16-le")
         token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
 
@@ -29,20 +28,17 @@ def _get_connection():
             f"Database={database};"
             f"Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
         )
-        conn = pyodbc.connect(conn_str, attrs_before={1256: token_struct})
-    else:
-        # Local dev: use connection string with SQL auth
-        conn_str = (
-            f"Driver={{ODBC Driver 18 for SQL Server}};"
-            f"Server=tcp:{server},1433;"
-            f"Database={database};"
-            f"UID={os.environ.get('AZURE_SQL_USER', 'sa')};"
-            f"PWD={os.environ['AZURE_SQL_PASSWORD']};"
-            f"Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
-        )
-        conn = pyodbc.connect(conn_str)
+        return pyodbc.connect(conn_str, attrs_before={1256: token_struct})
 
-    return conn
+    conn_str = (
+        f"Driver={{ODBC Driver 18 for SQL Server}};"
+        f"Server=tcp:{server},1433;"
+        f"Database={database};"
+        f"UID={os.environ.get('AZURE_SQL_USER', 'sa')};"
+        f"PWD={os.environ['AZURE_SQL_PASSWORD']};"
+        f"Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
+    )
+    return pyodbc.connect(conn_str)
 
 
 def seed(conn):
@@ -83,7 +79,7 @@ def seed(conn):
 
     cursor.execute("SELECT COUNT(*) FROM users")
     if cursor.fetchone()[0] == 0:
-        # Password stored as plaintext intentionally (this is a Vulnerable App)
+        # Password stored as plaintext intentionally (this is a vulnerable demo app)
         cursor.executemany(
             "INSERT INTO users (username, password_hash) VALUES (?, ?)",
             [("admin", "correct"), ("user1", "password123")],
@@ -94,7 +90,7 @@ def seed(conn):
 
 
 class SqlDb:
-    """Production db implementation backed by Azure SQL via pyodbc."""
+    """Vulnerable db backed by Azure SQL — intentionally uses f-string SQL."""
 
     def __init__(self):
         self._conn = _get_connection()
@@ -102,7 +98,6 @@ class SqlDb:
 
     def get_products(self):
         cursor = self._conn.cursor()
-        # Intentionally unparameterised for the demo — WAF should catch injection
         cursor.execute("SELECT id, name, price FROM products")
         rows = cursor.fetchall()
         cursor.close()
@@ -110,7 +105,7 @@ class SqlDb:
 
     def search_products(self, query):
         cursor = self._conn.cursor()
-        # Intentionally vulnerable: string formatting instead of parameterised query
+        # Intentionally vulnerable: f-string SQL instead of parameterised query
         sql = f"SELECT id, name, price FROM products WHERE name LIKE '%{query}%'"
         try:
             cursor.execute(sql)
@@ -122,7 +117,7 @@ class SqlDb:
 
     def check_login(self, username, password):
         cursor = self._conn.cursor()
-        # Intentionally vulnerable: string formatting instead of parameterised query
+        # Intentionally vulnerable: f-string SQL instead of parameterised query
         sql = f"SELECT COUNT(*) FROM users WHERE username='{username}' AND password_hash='{password}'"
         try:
             cursor.execute(sql)
@@ -131,3 +126,4 @@ class SqlDb:
             count = 0
         cursor.close()
         return count > 0
+
