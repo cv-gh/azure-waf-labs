@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 # startup.sh — install ODBC Driver 18 for SQL Server then launch gunicorn.
 # App Service Linux Python images don't ship with the Microsoft ODBC driver.
 # This script runs as root inside the container, so apt-get works fine.
