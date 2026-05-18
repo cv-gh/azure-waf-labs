@@ -10,6 +10,13 @@ param sqlAadAdminObjectId string
 @description('Object ID of the App Service system-assigned managed identity')
 param appServicePrincipalId string
 
+@description('SQL Server administrator login name')
+param sqlAdminLogin string = 'sqladmin'
+
+@description('SQL Server administrator password')
+@secure()
+param sqlAdminPassword string
+
 // Built-in Azure RBAC role: SQL DB Contributor
 // Grants the MSI permission to connect; T-SQL db_datareader/db_datawriter
 // should be granted via a post-deployment script or azd hook.
@@ -22,14 +29,16 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: 'sql-${environmentName}-${uniqueSuffix}'
   location: location
   properties: {
-    // AAD-only authentication — no SQL auth password
-    administrators: {
+    administratorLogin: sqlAdminLogin
+    administratorLoginPassword: sqlAdminPassword
+    // AAD admin is set alongside SQL auth (azureADOnlyAuthentication: false)
+    administrators: !empty(sqlAadAdminObjectId) ? {
       administratorType: 'ActiveDirectory'
       login: 'aad-admin'
       sid: sqlAadAdminObjectId
       tenantId: subscription().tenantId
-      azureADOnlyAuthentication: true
-    }
+      azureADOnlyAuthentication: false
+    } : null
     minimalTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
   }

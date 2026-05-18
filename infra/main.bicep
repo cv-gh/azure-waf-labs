@@ -9,6 +9,13 @@ param environmentName string
 @description('Azure AD object ID for the SQL AAD administrator')
 param sqlAadAdminObjectId string = ''
 
+@description('SQL Server administrator login name')
+param sqlAdminLogin string = 'sqladmin'
+
+@description('SQL Server administrator password')
+@secure()
+param sqlAdminPassword string
+
 // ── Log Analytics (no dependencies) ───────────────────────────────────────
 module loganalytics 'modules/loganalytics.bicep' = {
   name: 'loganalytics'
@@ -39,6 +46,8 @@ module sql 'modules/sql.bicep' = {
     location: location
     sqlAadAdminObjectId: sqlAadAdminObjectId
     appServicePrincipalId: appservice.outputs.principalId
+    sqlAdminLogin: sqlAdminLogin
+    sqlAdminPassword: sqlAdminPassword
   }
 }
 
@@ -51,6 +60,8 @@ module appserviceConfig 'modules/appservice.bicep' = {
     location: location
     sqlServerFqdn: sql.outputs.sqlServerFqdn
     databaseName: sql.outputs.databaseName
+    sqlAdminLogin: sqlAdminLogin
+    sqlAdminPassword: sqlAdminPassword
     logWorkspaceId: loganalytics.outputs.workspaceId
   }
 }

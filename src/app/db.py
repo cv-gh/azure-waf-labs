@@ -93,10 +93,15 @@ class SqlDb:
     """Vulnerable db backed by Azure SQL — intentionally uses f-string SQL."""
 
     def __init__(self):
-        self._conn = _get_connection()
-        seed(self._conn)
+        self._conn = None  # lazy — connect on first use so gunicorn starts cleanly
+
+    def _ensure_connected(self):
+        if self._conn is None:
+            self._conn = _get_connection()
+            seed(self._conn)
 
     def get_products(self):
+        self._ensure_connected()
         cursor = self._conn.cursor()
         cursor.execute("SELECT id, name, price FROM products")
         rows = cursor.fetchall()
@@ -104,6 +109,7 @@ class SqlDb:
         return [{"id": r[0], "name": r[1], "price": float(r[2])} for r in rows]
 
     def search_products(self, query):
+        self._ensure_connected()
         cursor = self._conn.cursor()
         # Intentionally vulnerable: f-string SQL instead of parameterised query
         sql = f"SELECT id, name, price FROM products WHERE name LIKE '%{query}%'"
@@ -116,6 +122,7 @@ class SqlDb:
         return [{"id": r[0], "name": r[1], "price": float(r[2])} for r in rows]
 
     def check_login(self, username, password):
+        self._ensure_connected()
         cursor = self._conn.cursor()
         # Intentionally vulnerable: f-string SQL instead of parameterised query
         sql = f"SELECT COUNT(*) FROM users WHERE username='{username}' AND password_hash='{password}'"

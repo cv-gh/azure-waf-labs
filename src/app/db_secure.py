@@ -9,10 +9,15 @@ class SqlDb:
     """Secure db — parameterised queries eliminate SQLi and WAF False Positives."""
 
     def __init__(self):
-        self._conn = _get_connection()
-        seed(self._conn)
+        self._conn = None  # lazy — connect on first use
+
+    def _ensure_connected(self):
+        if self._conn is None:
+            self._conn = _get_connection()
+            seed(self._conn)
 
     def get_products(self):
+        self._ensure_connected()
         cursor = self._conn.cursor()
         cursor.execute("SELECT id, name, price FROM products")
         rows = cursor.fetchall()
@@ -20,6 +25,7 @@ class SqlDb:
         return [{"id": r[0], "name": r[1], "price": float(r[2])} for r in rows]
 
     def search_products(self, query):
+        self._ensure_connected()
         cursor = self._conn.cursor()
         try:
             # Parameterised: apostrophes are data, not SQL syntax — no SQLi, no WAF FP
@@ -34,6 +40,7 @@ class SqlDb:
         return [{"id": r[0], "name": r[1], "price": float(r[2])} for r in rows]
 
     def check_login(self, username, password):
+        self._ensure_connected()
         cursor = self._conn.cursor()
         try:
             # Parameterised: login injection (e.g. ' OR 1=1--) is impossible

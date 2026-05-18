@@ -8,6 +8,16 @@ hooks:
       azd env set SQL_AAD_ADMIN_OBJECT_ID $oid
       Write-Host "Set SQL_AAD_ADMIN_OBJECT_ID=$oid"
 
+      azd env set AZURE_SQL_ADMIN_LOGIN "sqladmin"
+
+      $existing = azd env get-values 2>$null | Select-String "AZURE_SQL_ADMIN_PASSWORD"
+      if (-not $existing) {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#'.ToCharArray()
+        $pwd = -join (1..20 | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
+        azd env set AZURE_SQL_ADMIN_PASSWORD $pwd
+        Write-Host "Generated SQL admin password"
+      }
+
 services:
   app:
     project: src/app

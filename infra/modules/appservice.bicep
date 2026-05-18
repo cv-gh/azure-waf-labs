@@ -10,6 +10,13 @@ param sqlServerFqdn string
 @description('Name of the Azure SQL database')
 param databaseName string
 
+@description('SQL administrator login name')
+param sqlAdminLogin string = ''
+
+@description('SQL administrator password')
+@secure()
+param sqlAdminPassword string = ''
+
 @description('Resource ID of the Log Analytics workspace for diagnostic settings')
 param logWorkspaceId string
 
@@ -60,7 +67,15 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         }
         {
           name: 'AZURE_SQL_USE_MSI'
-          value: 'true'
+          value: 'false'
+        }
+        {
+          name: 'AZURE_SQL_USER'
+          value: sqlAdminLogin
+        }
+        {
+          name: 'AZURE_SQL_PASSWORD'
+          value: sqlAdminPassword
         }
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
