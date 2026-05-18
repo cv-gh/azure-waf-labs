@@ -1,0 +1,177 @@
+/* ── Fonts ──────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Lab step counter ───────────────────────────────────────────────────── */
+.md-content article {
+  counter-reset: lab-step;
+}
+
+.md-content article h2[id^="step-"] {
+  counter-increment: lab-step;
+}
+
+/* ── Hero section on index page ─────────────────────────────────────────── */
+.hero {
+  padding: 3rem 0 2rem;
+  text-align: center;
+}
+
+.hero__title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #3f51b5 0%, #ff5722 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero__subtitle {
+  font-size: 1.15rem;
+  color: var(--md-default-fg-color--light);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.hero__badges {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+/* ── Lab card grid ───────────────────────────────────────────────────────── */
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.lab-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  text-decoration: none !important;
+  display: block;
+  background: var(--md-default-bg-color);
+}
+
+.lab-card:hover {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 4px 16px rgba(63, 81, 181, 0.12);
+}
+
+.lab-card__number {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-primary-fg-color);
+  margin-bottom: 0.4rem;
+}
+
+.lab-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--md-default-fg-color);
+}
+
+.lab-card__desc {
+  font-size: 0.85rem;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.5;
+  margin: 0 0 0.75rem;
+}
+
+.lab-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+  background: var(--md-primary-fg-color--light);
+  color: var(--md-primary-fg-color);
+  opacity: 0.85;
+}
+
+[data-md-color-scheme="slate"] .tag {
+  background: rgba(63, 81, 181, 0.25);
+  color: #9fa8da;
+}
+
+/* ── Lab metadata bar ───────────────────────────────────────────────────── */
+.lab-meta {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--md-code-bg-color);
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.lab-meta__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.lab-meta__item strong {
+  color: var(--md-default-fg-color);
+}
+
+/* ── Architecture diagram box ───────────────────────────────────────────── */
+.arch-box {
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  margin: 1.5rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+
+/* ── Checklist completion table ─────────────────────────────────────────── */
+.bp-table td:last-child {
+  text-align: center;
+}
+
+/* ── Step heading pill ───────────────────────────────────────────────────── */
+.md-content h2 .step-pill {
+  display: inline-block;
+  background: var(--md-primary-fg-color);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+}
+
+/* ── Wider content area ─────────────────────────────────────────────────── */
+.md-grid {
+  max-width: 1100px;
+}
+
+/* ── Code annotation callouts ───────────────────────────────────────────── */
+.md-annotation__index {
+  background: var(--md-primary-fg-color) !important;
+}

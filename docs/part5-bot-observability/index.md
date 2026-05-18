@@ -1,6 +1,12 @@
 # Lab 5 — Bot Management & Observability
 
-**Goal:** Enable the Bot Manager ruleset to classify and block known-bad bots, simulate bot traffic, build KQL queries for WAF observability, create an Azure Monitor alert on blocked requests, then tear down all resources with `azd down`.
+<div class="lab-meta">
+  <div class="lab-meta__item">⏱ <strong>~45 min</strong></div>
+  <div class="lab-meta__item">🎯 <strong>Goal:</strong> Bot Manager, KQL dashboards, alerting, Sentinel, teardown</div>
+  <div class="lab-meta__item">🔑 <strong>Concepts:</strong> Bot Manager, Azure Monitor, Sentinel, KQL</div>
+</div>
+
+Enable the Bot Manager ruleset to classify and block known-bad bots, simulate bot traffic, build KQL queries for WAF observability, create an Azure Monitor alert on blocked requests, then tear down all resources with `azd down`.
 
 ---
 

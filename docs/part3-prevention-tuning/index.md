@@ -1,8 +1,15 @@
 # Lab 3 — Prevention & Tuning
 
-**Goal:** Switch the WAF Policy to Prevention Mode, confirm attack payloads are now blocked (True Positives), deliberately trigger a False Positive with a legitimate search containing an apostrophe, then add a scoped Rule Exclusion to resolve it without disabling the SQLi rule.
+<div class="lab-meta">
+  <div class="lab-meta__item">⏱ <strong>~40 min</strong></div>
+  <div class="lab-meta__item">🎯 <strong>Goal:</strong> Enable Prevention Mode, resolve False Positive with Rule Exclusion</div>
+  <div class="lab-meta__item">🔑 <strong>Concepts:</strong> Prevention Mode, False Positive, Rule Exclusion, Tuning</div>
+</div>
 
-This is the most operationally important lab — Rule Exclusion Tuning is the core skill of WAF operations.
+Switch the WAF Policy to Prevention Mode, confirm attack payloads are now blocked (True Positives), deliberately trigger a False Positive with a legitimate search containing an apostrophe, then add a scoped Rule Exclusion to resolve it without disabling the SQLi rule.
+
+!!! tip "Most important lab"
+    Rule Exclusion Tuning is the core skill of WAF operations. This lab covers it end-to-end.
 
 ---
 

@@ -1,6 +1,12 @@
 # Lab 2 — Attack & Detect
 
-**Goal:** Fire SQLi, XSS, and path traversal attack payloads at the Vulnerable App while the WAF is in Detection Mode. Observe every hit as a **True Positive** in the Application Gateway WAF logs.
+<div class="lab-meta">
+  <div class="lab-meta__item">⏱ <strong>~20 min</strong></div>
+  <div class="lab-meta__item">🎯 <strong>Goal:</strong> Fire attacks, observe True Positives in WAF logs</div>
+  <div class="lab-meta__item">🔑 <strong>Concepts:</strong> True Positive, Detection Mode, KQL</div>
+</div>
+
+Fire SQLi, XSS, and path traversal attack payloads at the Vulnerable App while the WAF is in Detection Mode. Observe every hit as a **True Positive** in the Application Gateway WAF logs.
 
 ---
 

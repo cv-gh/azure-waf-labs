@@ -1,6 +1,12 @@
 # Lab 4 — Custom Rules
 
-**Goal:** Create three Custom Rules — block `/admin` by IP address, rate-limit `/login` to prevent brute force, and geo-filter to allow only selected countries. Verify each rule with `curl`.
+<div class="lab-meta">
+  <div class="lab-meta__item">⏱ <strong>~30 min</strong></div>
+  <div class="lab-meta__item">🎯 <strong>Goal:</strong> IP block, rate-limit, geo-filter with Custom Rules</div>
+  <div class="lab-meta__item">🔑 <strong>Concepts:</strong> Custom Rules, Priority, Rate Limiting, Geo-filter</div>
+</div>
+
+Create three Custom Rules — block `/admin` by IP address, rate-limit `/login` to prevent brute force, and geo-filter to allow only selected countries. Verify each rule with `curl`.
 
 ---
 

@@ -1,6 +1,12 @@
 # Lab 1 — Deploy & Baseline
 
-**Goal:** Deploy the full infrastructure using `azd`, verify the Vulnerable App is reachable through the Application Gateway, confirm the WAF Policy is in Detection Mode, and locate the Log Analytics workspace where WAF logs will appear in later labs.
+<div class="lab-meta">
+  <div class="lab-meta__item">⏱ <strong>~30 min</strong></div>
+  <div class="lab-meta__item">🎯 <strong>Goal:</strong> Deploy stack, verify connectivity, confirm Detection Mode</div>
+  <div class="lab-meta__item">🔑 <strong>Concepts:</strong> azd, Detection Mode, Log Analytics</div>
+</div>
+
+Deploy the full infrastructure using `azd`, verify the Vulnerable App is reachable through the Application Gateway, confirm the WAF Policy is in Detection Mode, and locate the Log Analytics workspace where WAF logs will appear in later labs.
 
 ---
 
