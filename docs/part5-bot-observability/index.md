@@ -161,7 +161,87 @@ az monitor scheduled-query create \
 
 ---
 
-## Section 5 — Clean Up
+## Section 5 — Send WAF Logs to Microsoft Sentinel
+
+Microsoft Sentinel is a cloud-native SIEM that aggregates WAF logs alongside signals from across your Azure environment to detect coordinated attacks that span multiple services. The [WAF best practices](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices#send-logs-to-microsoft-sentinel) recommend forwarding WAF logs to Sentinel for production workloads.
+
+!!! info "Sentinel requires a separate workspace"
+    Microsoft Sentinel is enabled on top of a Log Analytics workspace. For this lab you can enable it on the **existing** Log Analytics workspace deployed by `azd up` — no new workspace needed.
+
+### Step 1 — Enable Microsoft Sentinel on the Log Analytics workspace
+
+```bash
+export LA_WORKSPACE_NAME="log-$(azd env get-values | grep AZURE_ENV_NAME | cut -d= -f2)"
+
+az sentinel onboarding-state create \
+  --resource-group $RESOURCE_GROUP \
+  --workspace-name $LA_WORKSPACE_NAME \
+  --name default
+```
+
+### Step 2 — Enable the Azure WAF data connector
+
+The Azure WAF connector imports `AzureDiagnostics` WAF log entries into Sentinel's unified security incident model.
+
+```bash
+az sentinel data-connector create \
+  --resource-group $RESOURCE_GROUP \
+  --workspace-name $LA_WORKSPACE_NAME \
+  --data-connector-id AzureWebApplicationFirewall \
+  --name "AzureWAF" \
+  --kind AzureWebApplicationFirewall
+```
+
+!!! tip
+    The WAF connector ingests the same `AzureDiagnostics` table you queried in Section 3 — no new data pipelines needed. Sentinel adds incident correlation, threat intelligence enrichment, and workbook dashboards on top.
+
+### Step 3 — Verify ingestion in Sentinel
+
+In the Azure portal:
+
+1. Open **Microsoft Sentinel** → select your Log Analytics workspace.
+2. Navigate to **Logs** and run:
+
+```kusto
+AzureDiagnostics
+| where Category == "ApplicationGatewayFirewallLog"
+| where action_s == "Blocked"
+| project TimeGenerated, clientIp_s, ruleId_s, requestUri_s
+| order by TimeGenerated desc
+| take 20
+```
+
+You should see the same blocked requests from Labs 2–4 now surfaced inside Sentinel.
+
+### Step 4 — (Optional) Enable the WAF Workbook
+
+Sentinel includes a pre-built Azure WAF workbook with visualisations for blocked requests, top attack types, and geographic origin.
+
+1. In Sentinel, go to **Workbooks → Templates**.
+2. Search for **Azure Web Application Firewall (WAF)**.
+3. Click **Save**, then **View saved workbook**.
+
+!!! success "All MS WAF best practices covered"
+    With Sentinel connected, every recommendation from the [WAF best practices page](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices) is now demonstrated in this lab series:
+
+    | Best Practice | Lab |
+    |---|---|
+    | Enable the WAF | Lab 1 |
+    | Use WAF Policies | Lab 1 |
+    | Use Detection Mode for tuning | Labs 1–2 |
+    | Tune your WAF (Rule Exclusions) | Lab 3 |
+    | Use Prevention Mode | Lab 3 |
+    | Define WAF config as code (Bicep) | Lab 3 |
+    | Enable core rule sets (DRS 2.1) | Lab 1 |
+    | Enable bot management rules | Lab 5 |
+    | Use latest ruleset versions (DRS 2.1) | Lab 1 |
+    | Geo-filter traffic | Lab 4 |
+    | Add diagnostic settings | Lab 1 |
+    | Send logs to Microsoft Sentinel | Lab 5 ✓ |
+
+---
+
+## Section 6 — Clean Up
 
 When you have finished all labs, delete all Azure resources to stop billing:
 
@@ -179,3 +259,4 @@ azd down
     - [Bot Manager ruleset — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/bot-protection-overview)
     - [WAF Tuning guide — Microsoft Learn](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-waf-request-size-limits)
     - [WAF Policy as code with Bicep — Azure samples](https://learn.microsoft.com/en-us/azure/templates/microsoft.network/applicationgatewaywebapplicationfirewallpolicies)
+    - [Using Microsoft Sentinel with Azure WAF](https://learn.microsoft.com/en-us/azure/web-application-firewall/waf-sentinel)
