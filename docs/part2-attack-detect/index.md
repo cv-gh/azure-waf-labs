@@ -128,3 +128,22 @@ AzureDiagnostics
 > Every one of these requests reached your Vulnerable App. The `action_s == "Detected"` value confirms the WAF *saw* the attack but did *not* stop it. This is the expected and correct behaviour for Detection Mode.
 >
 > In **Lab 3** you will switch to Prevention Mode — after which these same payloads will return **HTTP 403 Forbidden** before they reach the application.
+
+---
+
+## What about fixing the code?
+
+The WAF caught every attack above — but the application code is still vulnerable. If the WAF were disabled, every one of these payloads would reach the database or browser and cause real damage.
+
+In **Lab 3 Section 4** you will fix the underlying Flask app code:
+
+| Vulnerability | Root cause | Code fix |
+|---|---|---|
+| SQLi in `/search` | f-string SQL: `f"... LIKE '%{query}%'"` | Parameterised query: `cursor.execute(sql, [f"%{query}%"])` |
+| SQLi in `/login` | f-string SQL: `f"... username='{username}'"` | Parameterised query: `cursor.execute(sql, [username, password])` |
+| Reflected XSS in `/search` | `{{ query \| safe }}` bypasses Jinja escaping | Remove `\| safe` → Jinja auto-encodes output |
+| Path traversal in `/file` | No path sanitisation | `os.path.basename(name)` strips `../` sequences |
+
+{: .tip }
+> **WAF is defense-in-depth, not a substitute for secure code.** Fixing the code is always the primary fix. The WAF provides a second layer — it will still block attacks even after the code is hardened.
+

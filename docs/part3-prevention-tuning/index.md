@@ -181,3 +181,183 @@ curl -v "$APPGW_URL/search?q=' OR 1=1--"
 >   }
 > ]
 > ```
+
+---
+
+## Section 4 — Fix the Underlying Code
+
+Rule Exclusions are a *WAF-layer* fix: you tell the WAF to trust a specific parameter. The application code remains vulnerable. Any attacker who bypasses the WAF — through a misconfigured exclusion or a novel payload — can still exploit the application.
+
+The *correct* primary fix is to remove the vulnerability from the code. The WAF then becomes a true second layer of defense, not a first-and-only line.
+
+| Approach | Where the fix lives | After the fix |
+|---|---|---|
+| **Rule Exclusion** (Section 3) | WAF Policy | WAF trusts the `q` parameter; app code still runs f-string SQL |
+| **Code Fix** (this section) | Application source code | App uses parameterised SQL; WAF fires on real attacks only |
+
+> **Best practice:** Fix the code first. Then evaluate whether the Rule Exclusion is still needed.
+
+---
+
+### The three vulnerabilities and their fixes
+
+#### Fix 1 — Parameterise SQL in `search_products`
+
+The False Positive for `O'Brien` exists because the search query is interpolated directly into the SQL string.
+
+**Before (`src/app/db.py` — intentionally vulnerable):**
+
+```python
+# f-string injects the query value directly into SQL
+cursor.execute(f"SELECT * FROM products WHERE name LIKE '%{query}%'")
+```
+
+When `query = "O'Brien"` the SQL becomes:
+```sql
+SELECT * FROM products WHERE name LIKE '%O'Brien%'
+```
+The unescaped apostrophe breaks the SQL syntax — which is *exactly* what the WAF sees as a SQLi pattern.
+
+**After (`src/app/db_secure.py`):**
+
+```python
+# Parameterised query — the driver escapes the value safely
+cursor.execute("SELECT * FROM products WHERE name LIKE ?", [f"%{query}%"])
+```
+
+Now `O'Brien` is passed as a bound parameter. The driver escapes it. The SQL never contains a raw apostrophe. **The WAF rule does not fire because the HTTP request no longer looks like SQLi.**
+
+#### Fix 2 — Parameterise SQL in `check_login`
+
+Same pattern in the login endpoint:
+
+**Before:**
+
+```python
+cursor.execute(f"SELECT * FROM users WHERE username='{username}' AND password='{password}'")
+```
+
+**After:**
+
+```python
+cursor.execute("SELECT * FROM users WHERE username=? AND password=?", [username, password])
+```
+
+#### Fix 3 — Remove `| safe` from SEARCH_TEMPLATE and sanitise `/file`
+
+**Before (`src/app/app.py`):**
+
+```jinja
+{{ query | safe }}   {# Jinja bypasses auto-escaping — XSS possible #}
+```
+
+```python
+# /file endpoint — no path sanitisation
+name = request.args.get("name", "")
+with open(f"files/{name}", "r") as f:   # path traversal possible
+```
+
+**After (`src/app/app_secure.py`):**
+
+```jinja
+{{ query }}   {# Jinja auto-encodes <script> → &lt;script&gt; — XSS eliminated #}
+```
+
+```python
+import os
+name = os.path.basename(request.args.get("name", ""))  # strips ../ sequences
+```
+
+---
+
+### Apply the code fixes
+
+```bash
+# Verify environment variables are set
+source <(azd env get-values)
+
+# Apply all three fixes and redeploy
+./scripts/fix-code.sh
+```
+
+The script:
+1. Creates `.bak` backups of `db.py` and `app.py`
+2. Copies `db_secure.py` → `db.py` and `app_secure.py` → `app.py`
+3. Runs `azd deploy`
+
+---
+
+### Remove the Rule Exclusion (optional)
+
+After the code fix, the `q` parameter no longer generates a SQLi signal. You can remove the Rule Exclusion from Section 3:
+
+```bash
+# Remove the rule exclusion
+POLICY_ID=$(az network application-gateway show \
+  --resource-group "$AZURE_RESOURCE_GROUP" \
+  --name waf-lab-appgw \
+  --query "firewallPolicy.id" -o tsv)
+
+az network application-gateway waf-policy managed-rule exclusion remove \
+  --policy-name "${POLICY_ID##*/}" \
+  --resource-group "$AZURE_RESOURCE_GROUP" \
+  --match-variable RequestArgNames \
+  --selector q \
+  --selector-match-operator Equals
+```
+
+---
+
+### Verify the code fix
+
+```bash
+# Run the full verify suite
+./scripts/verify-code-fix.sh
+```
+
+Expected results:
+
+```
+✓ PASS  [200] O'Brien search — FP eliminated by parameterised SQL
+✓ PASS  [200] O'Brien Life Vest search
+✓ PASS  [200] Normal product search — Widget
+✓ PASS  [403] SQLi OR 1=1 — still blocked by WAF
+✓ PASS  [403] SQLi UNION SELECT — still blocked by WAF
+✓ PASS  [403] XSS script tag — still blocked by WAF
+✓ PASS  [403] Path traversal — still blocked by WAF
+✓ PASS  [200] Product API — unaffected
+✓ PASS  [200] Login page — unaffected
+
+=== Results: 9 passed, 0 failed ===
+```
+
+{: .success-title }
+> ## Code fix verified
+>
+> | Request | Before code fix | After code fix |
+> |---|---|---|
+> | `O'Brien` search | 403 (FP) | **200 OK** ✓ |
+> | `' OR 1=1--` SQLi | 403 (TP) | **403 Forbidden** ✓ |
+> | `<script>alert(1)</script>` | 403 (TP) | **403 Forbidden** ✓ |
+> | `../etc/passwd` | 403 (TP) | **403 Forbidden** ✓ |
+> | Normal `/search?q=Widget` | 200 | **200 OK** ✓ |
+>
+> The False Positive is eliminated at the application layer. The WAF is still in Prevention Mode and still blocks real attacks — defence-in-depth is preserved.
+
+{: .tip-title }
+> ## Should you keep or remove the Rule Exclusion?
+>
+> | Scenario | Recommendation |
+> |---|---|
+> | Code is fixed and deployed | Remove the exclusion — it is no longer needed |
+> | Code fix is in progress (other envs) | Keep the exclusion as a temporary measure |
+> | Legacy code that cannot be changed | Keep the exclusion, document the risk |
+>
+> In production, always prefer the code fix. Exclusions reduce WAF coverage — every exclusion is a small gap in your defence. Track all exclusions in your WAF Policy Bicep module and review them on each DRS ruleset upgrade.
+
+{: .warning }
+> **To restore the vulnerable app for further testing:**
+>
+> ```bash
+> git restore src/app/db.py src/app/app.py && azd deploy
+> ```

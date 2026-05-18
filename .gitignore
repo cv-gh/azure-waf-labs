@@ -34,6 +34,13 @@ env/
 # MkDocs output
 site/
 
+# Jekyll output
+_site/
+.jekyll-cache/
+
+# Lab script backups (created by fix-code.sh)
+*.bak
+
 # IDE
 .vscode/
 .idea/
