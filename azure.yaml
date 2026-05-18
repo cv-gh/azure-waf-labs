@@ -2,11 +2,11 @@ name: azure-waf-labs
 
 hooks:
   preprovision:
-    shell: sh
+    shell: pwsh
     run: |
-      OID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
-      azd env set SQL_AAD_ADMIN_OBJECT_ID "$OID"
-      echo "Set SQL_AAD_ADMIN_OBJECT_ID=$OID"
+      $oid = az ad signed-in-user show --query id -o tsv
+      azd env set SQL_AAD_ADMIN_OBJECT_ID $oid
+      Write-Host "Set SQL_AAD_ADMIN_OBJECT_ID=$oid"
 
 services:
   app:
