@@ -1,0 +1,415 @@
+{"0": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Lab 2 — Attack &amp; Detect",
+    "content": "⏱ ~20 min 🎯 Goal: Fire attacks, observe True Positives in WAF logs 🔑 Concepts: True Positive, Detection Mode, KQL Fire SQLi, XSS, and path traversal attack payloads at the Vulnerable App while the WAF is in Detection Mode. Observe every hit as a True Positive in the Application Gateway WAF logs. ",
+    "url": "/azure-waf-labs/labs/part2/#lab-2--attack--detect",
+    
+    "relUrl": "/labs/part2/#lab-2--attack--detect"
+  },"1": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Detection Mode behaviour",
+    "content": "In Detection Mode the WAF inspects every request and writes a log entry for each rule match, but passes the request through to the backend unchanged. This means: . | Attacks return HTTP 200 (the Vulnerable App responds normally). | The WAF log shows the matched rule ID and payload. | No traffic is blocked. | . This is intentional for Lab 2 — you want to see which rules fire before you activate Prevention Mode in Lab 3. ",
+    "url": "/azure-waf-labs/labs/part2/#detection-mode-behaviour",
+    
+    "relUrl": "/labs/part2/#detection-mode-behaviour"
+  },"2": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Understanding True Positives",
+    "content": "A True Positive (TP) is a WAF rule match that correctly identifies a real attack. The WAF fired, and it was right to do so. In Detection Mode a TP shows up as action_s == \"Detected\" in the WAF logs. The opposite of a TP is a False Positive (FP) — a rule match that incorrectly flags legitimate traffic. You will encounter a deliberate FP in Lab 3. ",
+    "url": "/azure-waf-labs/labs/part2/#understanding-true-positives",
+    
+    "relUrl": "/labs/part2/#understanding-true-positives"
+  },"3": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Step 1 — Set APPGW_URL",
+    "content": "export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2) echo $APPGW_URL . ",
+    "url": "/azure-waf-labs/labs/part2/#step-1--set-appgw_url",
+    
+    "relUrl": "/labs/part2/#step-1--set-appgw_url"
+  },"4": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Step 2 — Fire a SQL Injection attack (rule 942100)",
+    "content": "curl -v \"$APPGW_URL/search?q=' OR 1=1--\" . What this does: The payload ' OR 1=1-- is a classic SQL injection string. DRS 2.1 rule 942100 (SQL Injection Attack Detected via libinjection) matches the q query parameter. Expected response: HTTP/1.1 200 OK — the Vulnerable App responds. Detection Mode does not block. ",
+    "url": "/azure-waf-labs/labs/part2/#step-2--fire-a-sql-injection-attack-rule-942100",
+    
+    "relUrl": "/labs/part2/#step-2--fire-a-sql-injection-attack-rule-942100"
+  },"5": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Step 3 — Fire an XSS attack (rule 941100)",
+    "content": "curl -v \"$APPGW_URL/search?q=&lt;script&gt;alert(1)&lt;/script&gt;\" . What this does: The &lt;script&gt; tag is a canonical Cross-Site Scripting payload. DRS 2.1 rule 941100 (XSS Attack Detected via libinjection) matches. Expected response: HTTP/1.1 200 OK — passed through, logged. ",
+    "url": "/azure-waf-labs/labs/part2/#step-3--fire-an-xss-attack-rule-941100",
+    
+    "relUrl": "/labs/part2/#step-3--fire-an-xss-attack-rule-941100"
+  },"6": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Step 4 — Fire a path traversal attack (rule 930100)",
+    "content": "curl -v \"$APPGW_URL/file?name=../../etc/passwd\" . What this does: The ../ sequence attempts to traverse out of the web root. DRS 2.1 rule 930100 (Path Traversal Attack) matches. Expected response: HTTP/1.1 200 OK — passed through, logged. ",
+    "url": "/azure-waf-labs/labs/part2/#step-4--fire-a-path-traversal-attack-rule-930100",
+    
+    "relUrl": "/labs/part2/#step-4--fire-a-path-traversal-attack-rule-930100"
+  },"7": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Step 5 — Run the full Attack Script",
+    "content": "The repository includes a complete Attack Script that exercises multiple rule groups: ./scripts/attack-part2.sh . Review the script before running it to understand every payload and which DRS 2.1 rule group it targets. ",
+    "url": "/azure-waf-labs/labs/part2/#step-5--run-the-full-attack-script",
+    
+    "relUrl": "/labs/part2/#step-5--run-the-full-attack-script"
+  },"8": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Step 6 — Query WAF logs in Log Analytics",
+    "content": "Open the Log Analytics workspace in the portal, select Logs, and run: . AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | where action_s == \"Detected\" | project TimeGenerated, clientIp_s, requestUri_s, ruleId_s, message_s | order by TimeGenerated desc . ",
+    "url": "/azure-waf-labs/labs/part2/#step-6--query-waf-logs-in-log-analytics",
+    
+    "relUrl": "/labs/part2/#step-6--query-waf-logs-in-log-analytics"
+  },"9": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "True Positives confirmed",
+    "content": "You should see rows for rule IDs 942100, 941100, and 930100 (plus others from the Attack Script). Each row is a True Positive — the WAF correctly identified an attack payload. Key columns to review: . | Column | Meaning | . | ruleId_s | DRS 2.1 rule that matched | . | requestUri_s | The URI + query string that triggered the rule | . | clientIp_s | Your IP address | . | message_s | Human-readable rule description | . ",
+    "url": "/azure-waf-labs/labs/part2/#true-positives-confirmed",
+    
+    "relUrl": "/labs/part2/#true-positives-confirmed"
+  },"10": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Detection Mode means no blocking",
+    "content": "Every one of these requests reached your Vulnerable App. The action_s == \"Detected\" value confirms the WAF saw the attack but did not stop it. This is the expected and correct behaviour for Detection Mode. In Lab 3 you will switch to Prevention Mode — after which these same payloads will return HTTP 403 Forbidden before they reach the application. ",
+    "url": "/azure-waf-labs/labs/part2/#detection-mode-means-no-blocking",
+    
+    "relUrl": "/labs/part2/#detection-mode-means-no-blocking"
+  },"11": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "What about fixing the code?",
+    "content": "The WAF caught every attack above — but the application code is still vulnerable. If the WAF were disabled, every one of these payloads would reach the database or browser and cause real damage. In Lab 3 Section 4 you will fix the underlying Flask app code: . | Vulnerability | Root cause | Code fix | . | SQLi in /search | f-string SQL: f\"... LIKE '%{query}%'\" | Parameterised query: cursor.execute(sql, [f\"%{query}%\"]) | . | SQLi in /login | f-string SQL: f\"... username='{username}'\" | Parameterised query: cursor.execute(sql, [username, password]) | . | Reflected XSS in /search | `` bypasses Jinja escaping | Remove \\| safe → Jinja auto-encodes output | . | Path traversal in /file | No path sanitisation | os.path.basename(name) strips ../ sequences | . WAF is defense-in-depth, not a substitute for secure code. Fixing the code is always the primary fix. The WAF provides a second layer — it will still block attacks even after the code is hardened. ",
+    "url": "/azure-waf-labs/labs/part2/#what-about-fixing-the-code",
+    
+    "relUrl": "/labs/part2/#what-about-fixing-the-code"
+  },"12": {
+    "doc": "Lab 2 — Attack & Detect",
+    "title": "Lab 2 — Attack & Detect",
+    "content": " ",
+    "url": "/azure-waf-labs/labs/part2/",
+    
+    "relUrl": "/labs/part2/"
+  },"13": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Lab 5 — Bot Management &amp; Observability",
+    "content": "⏱ ~45 min 🎯 Goal: Bot Manager, KQL dashboards, alerting, Sentinel, teardown 🔑 Concepts: Bot Manager, Azure Monitor, Sentinel, KQL Enable the Bot Manager ruleset to classify and block known-bad bots, simulate bot traffic, build KQL queries for WAF observability, create an Azure Monitor alert on blocked requests, then tear down all resources with azd down. ",
+    "url": "/azure-waf-labs/labs/part5/#lab-5--bot-management--observability",
+    
+    "relUrl": "/labs/part5/#lab-5--bot-management--observability"
+  },"14": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Section 1 — Enable the Bot Manager Ruleset",
+    "content": "The Microsoft_BotManagerRuleSet is a separate managed ruleset from DRS 2.1. It classifies crawlers, scrapers, and known attack tools by User-Agent signature and other heuristics. export WAF_POLICY_NAME=$(azd env get-values | grep WAF_POLICY_NAME | cut -d= -f2) export RESOURCE_GROUP=$(azd env get-values | grep AZURE_RESOURCE_GROUP | cut -d= -f2) export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2) az network application-gateway waf-policy managed-rule rule-set add \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --type Microsoft_BotManagerRuleSet \\ --version 1.0 . Verify both rulesets are active: . az network application-gateway waf-policy show \\ --name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --query \"managedRules.managedRuleSets[].{type:ruleSetType, version:ruleSetVersion}\" . Expected output: . [ { \"type\": \"Microsoft_DefaultRuleSet\", \"version\": \"2.1\" }, { \"type\": \"Microsoft_BotManagerRuleSet\", \"version\": \"1.0\" } ] . ",
+    "url": "/azure-waf-labs/labs/part5/#section-1--enable-the-bot-manager-ruleset",
+    
+    "relUrl": "/labs/part5/#section-1--enable-the-bot-manager-ruleset"
+  },"15": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Section 2 — Simulate Bot Traffic",
+    "content": "Send a request using the sqlmap User-Agent — a well-known SQL injection tool that Bot Manager identifies and blocks: . curl -v -H \"User-Agent: sqlmap/1.7\" \"$APPGW_URL/api/products\" . Expected response: HTTP/1.1 403 Forbidden . The Bot Manager ruleset matched the sqlmap User-Agent signature before DRS 2.1 even ran. Try a few more known bad user agents: . # Nikto web scanner curl -v -H \"User-Agent: Nikto/2.1.6\" \"$APPGW_URL/api/products\" # Masscan port scanner curl -v -H \"User-Agent: masscan/1.3\" \"$APPGW_URL/api/products\" . Query the WAF logs to see Bot Manager detections: . AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | where ruleSetType_s == \"BotProtection\" | project TimeGenerated, clientIp_s, requestUri_s, ruleId_s, message_s, action_s | order by TimeGenerated desc . ",
+    "url": "/azure-waf-labs/labs/part5/#section-2--simulate-bot-traffic",
+    
+    "relUrl": "/labs/part5/#section-2--simulate-bot-traffic"
+  },"16": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Section 3 — KQL Queries for WAF Observability",
+    "content": "Open the Log Analytics workspace and run these queries to build operational insight into your WAF. Blocked requests by rule ID (top 10) . AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | where action_s == \"Blocked\" | summarize BlockCount = count() by ruleId_s | top 10 by BlockCount desc | render barchart . Requests by client IP (top 20) . AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | summarize RequestCount = count() by clientIp_s | top 20 by RequestCount desc . True Positive vs False Positive ratio over time . This query uses Prevention Mode action values to track the blocked-vs-detected ratio. After Tuning in Lab 3, you should see Detected volume drop significantly. AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | where action_s in (\"Blocked\", \"Detected\") | summarize Count = count() by bin(TimeGenerated, 5m), action_s | render timechart . WAF log volume by hour . AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | summarize Events = count() by bin(TimeGenerated, 1h) | render columnchart . ",
+    "url": "/azure-waf-labs/labs/part5/#section-3--kql-queries-for-waf-observability",
+    
+    "relUrl": "/labs/part5/#section-3--kql-queries-for-waf-observability"
+  },"17": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Section 4 — Create an Azure Monitor Alert",
+    "content": "Create an alert that fires when the number of WAF-blocked requests exceeds 10 in a 5-minute window. This gives your operations team early warning of an active attack or misconfiguration. Step 1 — Get the Log Analytics workspace resource ID . export LA_WORKSPACE_ID=$(az monitor log-analytics workspace show \\ --resource-group $RESOURCE_GROUP \\ --workspace-name \"log-$(azd env get-values | grep AZURE_ENV_NAME | cut -d= -f2)\" \\ --query id -o tsv) . Step 2 — Create the alert rule . az monitor scheduled-query create \\ --name \"WAF-HighBlockRate\" \\ --resource-group $RESOURCE_GROUP \\ --scopes $LA_WORKSPACE_ID \\ --condition-query \"AzureDiagnostics | where ResourceType == 'APPLICATIONGATEWAYS' | where Category == 'ApplicationGatewayFirewallLog' | where action_s == 'Blocked' | summarize BlockCount = count()\" \\ --condition \"count BlockCount &gt; 10\" \\ --window-size \"PT5M\" \\ --evaluation-frequency \"PT5M\" \\ --severity 2 \\ --description \"Alert when WAF blocks more than 10 requests in 5 minutes — possible active attack\" . Step 3 — Verify the alert in the portal . | Open the resource group in the Azure portal. | Navigate to Monitor → Alerts. | Confirm WAF-HighBlockRate is listed and in an Enabled state. | Trigger the alert by running the Attack Script: ./scripts/attack-part2.sh | . ",
+    "url": "/azure-waf-labs/labs/part5/#section-4--create-an-azure-monitor-alert",
+    
+    "relUrl": "/labs/part5/#section-4--create-an-azure-monitor-alert"
+  },"18": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Section 5 — Send WAF Logs to Microsoft Sentinel",
+    "content": "Microsoft Sentinel is a cloud-native SIEM that aggregates WAF logs alongside signals from across your Azure environment to detect coordinated attacks that span multiple services. The WAF best practices recommend forwarding WAF logs to Sentinel for production workloads. ",
+    "url": "/azure-waf-labs/labs/part5/#section-5--send-waf-logs-to-microsoft-sentinel",
+    
+    "relUrl": "/labs/part5/#section-5--send-waf-logs-to-microsoft-sentinel"
+  },"19": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Sentinel requires a separate workspace",
+    "content": "Microsoft Sentinel is enabled on top of a Log Analytics workspace. For this lab you can enable it on the existing Log Analytics workspace deployed by azd up — no new workspace needed. Step 1 — Enable Microsoft Sentinel on the Log Analytics workspace . export LA_WORKSPACE_NAME=\"log-$(azd env get-values | grep AZURE_ENV_NAME | cut -d= -f2)\" az sentinel onboarding-state create \\ --resource-group $RESOURCE_GROUP \\ --workspace-name $LA_WORKSPACE_NAME \\ --name default . Step 2 — Enable the Azure WAF data connector . The Azure WAF connector imports AzureDiagnostics WAF log entries into Sentinel’s unified security incident model. az sentinel data-connector create \\ --resource-group $RESOURCE_GROUP \\ --workspace-name $LA_WORKSPACE_NAME \\ --data-connector-id AzureWebApplicationFirewall \\ --name \"AzureWAF\" \\ --kind AzureWebApplicationFirewall . The WAF connector ingests the same AzureDiagnostics table you queried in Section 3 — no new data pipelines needed. Sentinel adds incident correlation, threat intelligence enrichment, and workbook dashboards on top. Step 3 — Verify ingestion in Sentinel . In the Azure portal: . | Open Microsoft Sentinel → select your Log Analytics workspace. | Navigate to Logs and run: | . AzureDiagnostics | where Category == \"ApplicationGatewayFirewallLog\" | where action_s == \"Blocked\" | project TimeGenerated, clientIp_s, ruleId_s, requestUri_s | order by TimeGenerated desc | take 20 . You should see the same blocked requests from Labs 2–4 now surfaced inside Sentinel. Step 4 — (Optional) Enable the WAF Workbook . Sentinel includes a pre-built Azure WAF workbook with visualisations for blocked requests, top attack types, and geographic origin. | In Sentinel, go to Workbooks → Templates. | Search for Azure Web Application Firewall (WAF). | Click Save, then View saved workbook. | . ",
+    "url": "/azure-waf-labs/labs/part5/#sentinel-requires-a-separate-workspace",
+    
+    "relUrl": "/labs/part5/#sentinel-requires-a-separate-workspace"
+  },"20": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "All MS WAF best practices covered",
+    "content": "With Sentinel connected, every recommendation from the WAF best practices page is now demonstrated in this lab series: . | Best Practice | Lab | . | Enable the WAF | Lab 1 | . | Use WAF Policies | Lab 1 | . | Use Detection Mode for tuning | Labs 1–2 | . | Tune your WAF (Rule Exclusions) | Lab 3 | . | Use Prevention Mode | Lab 3 | . | Define WAF config as code (Bicep) | Lab 3 | . | Enable core rule sets (DRS 2.1) | Lab 1 | . | Enable bot management rules | Lab 5 | . | Use latest ruleset versions (DRS 2.1) | Lab 1 | . | Geo-filter traffic | Lab 4 | . | Add diagnostic settings | Lab 1 | . | Send logs to Microsoft Sentinel | Lab 5 ✓ | . ",
+    "url": "/azure-waf-labs/labs/part5/#all-ms-waf-best-practices-covered",
+    
+    "relUrl": "/labs/part5/#all-ms-waf-best-practices-covered"
+  },"21": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Section 6 — Clean Up",
+    "content": "When you have finished all labs, delete all Azure resources to stop billing: . azd down . azd down removes the entire resource group, including the Application Gateway, App Service, SQL database, Log Analytics workspace, and all associated resources. This is the recommended cleanup path — do not delete resources individually. ",
+    "url": "/azure-waf-labs/labs/part5/#section-6--clean-up",
+    
+    "relUrl": "/labs/part5/#section-6--clean-up"
+  },"22": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Further reading",
+    "content": "To continue learning about Azure Application Gateway WAF: . | WAF best practices — Microsoft Learn | DRS 2.1 rule groups — Microsoft Learn | Bot Manager ruleset — Microsoft Learn | WAF Tuning guide — Microsoft Learn | WAF Policy as code with Bicep — Azure samples | Using Microsoft Sentinel with Azure WAF | . ",
+    "url": "/azure-waf-labs/labs/part5/#further-reading",
+    
+    "relUrl": "/labs/part5/#further-reading"
+  },"23": {
+    "doc": "Lab 5 — Bot & Observability",
+    "title": "Lab 5 — Bot & Observability",
+    "content": " ",
+    "url": "/azure-waf-labs/labs/part5/",
+    
+    "relUrl": "/labs/part5/"
+  },"24": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Lab 4 — Custom Rules",
+    "content": "⏱ ~30 min 🎯 Goal: IP block, rate-limit, geo-filter with Custom Rules 🔑 Concepts: Custom Rules, Priority, Rate Limiting, Geo-filter Create three Custom Rules — block /admin by IP address, rate-limit /login to prevent brute force, and geo-filter to allow only selected countries. Verify each rule with curl. ",
+    "url": "/azure-waf-labs/labs/part4/",
+    
+    "relUrl": "/labs/part4/"
+  },"25": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "How Custom Rules work",
+    "content": "Custom Rules are WAF Policy rules you define yourself. They are evaluated before the managed DRS 2.1 ruleset, in ascending priority order (lowest number = first evaluated). If a Custom Rule matches and the action is Block, the request is stopped immediately — the DRS rules are never consulted. Custom Rules support: . | Match condition | Examples | . | RequestUri | Protect specific paths like /admin, /login | . | RemoteAddr | IP allowlists / blocklists | . | RequestHeaders | Match on User-Agent, Referer, etc. | . | GeoMatch | Country-of-origin filtering | . Custom Rule types: . | MatchRule — evaluates conditions once per request. | RateLimitRule — counts requests over a time window per client IP; blocks when threshold is exceeded. | . ",
+    "url": "/azure-waf-labs/labs/part4/#how-custom-rules-work",
+    
+    "relUrl": "/labs/part4/#how-custom-rules-work"
+  },"26": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Prerequisites",
+    "content": "Set environment variables: . export WAF_POLICY_NAME=$(azd env get-values | grep WAF_POLICY_NAME | cut -d= -f2) export RESOURCE_GROUP=$(azd env get-values | grep AZURE_RESOURCE_GROUP | cut -d= -f2) export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2) export MY_IP=$(curl -s https://api.ipify.org) . ",
+    "url": "/azure-waf-labs/labs/part4/#prerequisites",
+    
+    "relUrl": "/labs/part4/#prerequisites"
+  },"27": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Section 1 — Block /admin by IP",
+    "content": "Create a Custom Rule that blocks any request to /admin from an IP address that is not your own. This simulates protecting an admin interface from public internet access. Step 1 — Create the Custom Rule . az network application-gateway waf-policy custom-rule create \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name BlockAdminByIP \\ --priority 10 \\ --rule-type MatchRule \\ --action Block . Step 2 — Add match condition: URI contains /admin AND source IP is not your IP . # Condition 1: request targets /admin az network application-gateway waf-policy custom-rule match-condition add \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name BlockAdminByIP \\ --match-variable RequestUri \\ --operator Contains \\ --values \"/admin\" # Condition 2: source IP is NOT your IP (negate the match) az network application-gateway waf-policy custom-rule match-condition add \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name BlockAdminByIP \\ --match-variable RemoteAddr \\ --operator IPMatch \\ --negate true \\ --values \"$MY_IP\" . Step 3 — Verify . # From your IP — should be allowed (200) curl -v \"$APPGW_URL/admin\" # From a different perspective (simulate with a non-matching IP in the condition): # Use a VPN or change MY_IP to a different address to test blocking curl -v \"$APPGW_URL/admin\" --header \"X-Forwarded-For: 1.2.3.4\" # Expected: HTTP/1.1 403 Forbidden . ",
+    "url": "/azure-waf-labs/labs/part4/#section-1--block-admin-by-ip",
+    
+    "relUrl": "/labs/part4/#section-1--block-admin-by-ip"
+  },"28": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Section 2 — Rate-limit /login (brute force protection)",
+    "content": "Create a Custom Rule that limits each client IP to 10 requests per minute on the /login endpoint. Step 1 — Create the rate limit rule . az network application-gateway waf-policy custom-rule create \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name RateLimitLogin \\ --priority 20 \\ --rule-type RateLimitRule \\ --action Block \\ --rate-limit-threshold 10 \\ --rate-limit-duration OneMin \\ --group-by-user-session '[{\"groupByVariables\":[{\"variableName\":\"ClientAddr\"}]}]' . Step 2 — Add match condition: request targets /login . az network application-gateway waf-policy custom-rule match-condition add \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name RateLimitLogin \\ --match-variable RequestUri \\ --operator Contains \\ --values \"/login\" . Step 3 — Verify (trigger the rate limit) . # Send 15 rapid requests to /login — the 11th+ should return 429 for i in $(seq 1 15); do echo -n \"Request $i: \" curl -s -o /dev/null -w \"%{http_code}\" \"$APPGW_URL/login\" echo done . After 10 requests within one minute, subsequent requests will return HTTP 429 Too Many Requests until the window resets. ",
+    "url": "/azure-waf-labs/labs/part4/#section-2--rate-limit-login-brute-force-protection",
+    
+    "relUrl": "/labs/part4/#section-2--rate-limit-login-brute-force-protection"
+  },"29": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Section 3 — Geo-filter (allow only selected countries)",
+    "content": "Create a Custom Rule that blocks traffic originating outside of India (IN) and the United States (US). Adjust the country codes to match your expected user base. Step 1 — Create the geo-filter rule . az network application-gateway waf-policy custom-rule create \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name GeoFilter \\ --priority 30 \\ --rule-type MatchRule \\ --action Block . Step 2 — Add match condition: GeoMatch NOT IN [IN, US] . az network application-gateway waf-policy custom-rule match-condition add \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --name GeoFilter \\ --match-variable RemoteAddr \\ --operator GeoMatch \\ --negate true \\ --values \"IN\" \"US\" . Step 3 — Verify . Use a VPN exit node in a blocked country (e.g. Germany, DE) to confirm the 403 response, then disable the VPN and confirm your normal traffic passes. ",
+    "url": "/azure-waf-labs/labs/part4/#section-3--geo-filter-allow-only-selected-countries",
+    
+    "relUrl": "/labs/part4/#section-3--geo-filter-allow-only-selected-countries"
+  },"30": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Section 4 — View Custom Rule matches in WAF logs",
+    "content": "AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | where policyMode_s == \"Prevention\" | where action_s == \"Blocked\" | where isnotempty(userDefinedRuleName_s) | project TimeGenerated, clientIp_s, requestUri_s, userDefinedRuleName_s, action_s | order by TimeGenerated desc . The userDefinedRuleName_s column will show BlockAdminByIP, RateLimitLogin, or GeoFilter — confirming which Custom Rule fired. ",
+    "url": "/azure-waf-labs/labs/part4/#section-4--view-custom-rule-matches-in-waf-logs",
+    
+    "relUrl": "/labs/part4/#section-4--view-custom-rule-matches-in-waf-logs"
+  },"31": {
+    "doc": "Lab 4 — Custom Rules",
+    "title": "Custom Rule priority order matters",
+    "content": "Custom Rules are evaluated in ascending priority order. Priority 10 (BlockAdminByIP) is evaluated before priority 20 (RateLimitLogin) and priority 30 (GeoFilter). If a request to /admin from a blocked IP matches BlockAdminByIP at priority 10, it is blocked immediately — the rate limit and geo rules never run. Reserve priorities 1–99 for Custom Rules, leaving headroom for future rules between existing ones. ",
+    "url": "/azure-waf-labs/labs/part4/#custom-rule-priority-order-matters",
+    
+    "relUrl": "/labs/part4/#custom-rule-priority-order-matters"
+  },"32": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Lab 3 — Prevention &amp; Tuning",
+    "content": "⏱ ~40 min 🎯 Goal: Enable Prevention Mode, resolve False Positive with Rule Exclusion 🔑 Concepts: Prevention Mode, False Positive, Rule Exclusion, Tuning Switch the WAF Policy to Prevention Mode, confirm attack payloads are now blocked (True Positives), deliberately trigger a False Positive with a legitimate search containing an apostrophe, then add a scoped Rule Exclusion to resolve it without disabling the SQLi rule. Rule Exclusion Tuning is the core skill of WAF operations. This lab covers it end-to-end. ",
+    "url": "/azure-waf-labs/labs/part3/#lab-3--prevention--tuning",
+    
+    "relUrl": "/labs/part3/#lab-3--prevention--tuning"
+  },"33": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Enabling Prevention Mode",
+    "content": "Step 1 — Switch WAF Policy to Prevention Mode . Set the environment variables from your azd environment: . export WAF_POLICY_NAME=$(azd env get-values | grep WAF_POLICY_NAME | cut -d= -f2) export RESOURCE_GROUP=$(azd env get-values | grep AZURE_RESOURCE_GROUP | cut -d= -f2) export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2) . Apply the mode change: . az network application-gateway waf-policy update \\ --name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --set policySettings.mode=Prevention . Step 2 — Confirm attack payloads are now blocked . Re-run the SQLi payload from Lab 2: . curl -v \"$APPGW_URL/search?q=' OR 1=1--\" # Expected: HTTP/1.1 403 Forbidden . ",
+    "url": "/azure-waf-labs/labs/part3/#enabling-prevention-mode",
+    
+    "relUrl": "/labs/part3/#enabling-prevention-mode"
+  },"34": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "True Positive",
+    "content": "The WAF correctly blocked the SQL injection attack. The Vulnerable App never saw the request. This is a True Positive — the WAF fired, and it was right. The response body will contain: . &lt;html&gt;&lt;head&gt;&lt;title&gt;403 Forbidden&lt;/title&gt;&lt;/head&gt; &lt;body&gt;The server is temporarily unable to service your request. Please try again later.&lt;/body&gt; &lt;/html&gt; . ",
+    "url": "/azure-waf-labs/labs/part3/#true-positive",
+    
+    "relUrl": "/labs/part3/#true-positive"
+  },"35": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Encountering a False Positive",
+    "content": "Step 3 — Search for “O’Brien” (a legitimate product name) . curl -v \"$APPGW_URL/search?q=O'Brien\" # Expected: HTTP/1.1 403 Forbidden — but this is a LEGITIMATE search! . ",
+    "url": "/azure-waf-labs/labs/part3/#encountering-a-false-positive",
+    
+    "relUrl": "/labs/part3/#encountering-a-false-positive"
+  },"36": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "False Positive",
+    "content": "Rule 942100 matched the apostrophe in O'Brien as a SQL injection character. This is a False Positive — a legitimate request that was incorrectly blocked by the WAF. Your application sells products with apostrophes in their names (e.g. “O’Brien Wakeboard”). Without Tuning, every customer searching for this product gets a 403 error. The WAF has introduced a regression in application functionality. The wrong fix is to disable rule 942100 entirely — that would leave you exposed to real SQLi attacks. The right fix is a scoped Rule Exclusion. Step 4 — Confirm rule 942100 fired for the FP . AzureDiagnostics | where ruleId_s == \"942100\" | project TimeGenerated, requestUri_s, details_message_s, action_s . Look for rows where action_s == \"Blocked\" and requestUri_s contains O%27Brien (URL-encoded apostrophe). This confirms rule 942100 is responsible. ",
+    "url": "/azure-waf-labs/labs/part3/#false-positive",
+    
+    "relUrl": "/labs/part3/#false-positive"
+  },"37": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Tuning — Adding a Rule Exclusion",
+    "content": "Tuning means adding a scoped Rule Exclusion to eliminate a False Positive without disabling the rule for all requests. The exclusion tells the WAF: “Don’t apply rule 942100 when inspecting the q query parameter.” . Everything else about rule 942100 remains active — it still inspects headers, cookies, request bodies, and all other query parameters. Step 5 — Add a Rule Exclusion scoped to query parameter q for rule 942100 . az network application-gateway waf-policy managed-rule exclusion add \\ --policy-name $WAF_POLICY_NAME \\ --resource-group $RESOURCE_GROUP \\ --match-variable RequestArgNames \\ --selector q \\ --selector-match-operator Equals \\ --rule-set-type Microsoft_DefaultRuleSet \\ --rule-set-version 2.1 \\ --rule-group-name SQLI \\ --rules 942100 . What this exclusion does: . | Setting | Value | Meaning | . | --match-variable | RequestArgNames | Targets query string / POST body argument names | . | --selector | q | Only the argument literally named q | . | --selector-match-operator | Equals | Exact name match (not prefix/contains) | . | --rule-group-name | SQLI | Scoped to the SQL Injection rule group | . | --rules | 942100 | Only this specific rule | . The exclusion is intentionally narrow. It does not disable SQLi inspection on /login, username, id, or any other parameter. Step 6 — Verify the False Positive is resolved . curl -v \"$APPGW_URL/search?q=O'Brien\" # Expected: HTTP/1.1 200 OK — legitimate search works again . Step 7 — Verify the True Positive is still blocked . curl -v \"$APPGW_URL/search?q=' OR 1=1--\" # Expected: HTTP/1.1 403 Forbidden — attack still blocked . ",
+    "url": "/azure-waf-labs/labs/part3/#tuning--adding-a-rule-exclusion",
+    
+    "relUrl": "/labs/part3/#tuning--adding-a-rule-exclusion"
+  },"38": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Tuning complete",
+    "content": ". | O'Brien → 200 OK — False Positive eliminated ✓ | ' OR 1=1-- → 403 Forbidden — True Positive preserved ✓ | . Rule 942100 is still active for all other parameters and locations. You have resolved the FP with surgical precision. ",
+    "url": "/azure-waf-labs/labs/part3/#tuning-complete",
+    
+    "relUrl": "/labs/part3/#tuning-complete"
+  },"39": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "WAF as Code",
+    "content": "In production, define Rule Exclusions in your Bicep modules so they are version-controlled, code-reviewed, and survive DRS ruleset upgrades. See ADR-0001 in docs/adr/ for the rationale for using DRS 2.1 instead of OWASP CRS 3.2, and the Bicep appgateway.bicep module for where to add exclusions to the managedRules block. Example Bicep exclusion: . exclusions: [ { matchVariable: 'RequestArgNames' selector: 'q' selectorMatchOperator: 'Equals' exclusionManagedRuleSets: [ { ruleSetType: 'Microsoft_DefaultRuleSet' ruleSetVersion: '2.1' ruleGroups: [ { ruleGroupName: 'SQLI' rules: [ { ruleId: '942100' } ] } ] } ] } ] . ",
+    "url": "/azure-waf-labs/labs/part3/#waf-as-code",
+    
+    "relUrl": "/labs/part3/#waf-as-code"
+  },"40": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Section 4 — Fix the Underlying Code",
+    "content": "Rule Exclusions are a WAF-layer fix: you tell the WAF to trust a specific parameter. The application code remains vulnerable. Any attacker who bypasses the WAF — through a misconfigured exclusion or a novel payload — can still exploit the application. The correct primary fix is to remove the vulnerability from the code. The WAF then becomes a true second layer of defense, not a first-and-only line. | Approach | Where the fix lives | After the fix | . | Rule Exclusion (Section 3) | WAF Policy | WAF trusts the q parameter; app code still runs f-string SQL | . | Code Fix (this section) | Application source code | App uses parameterised SQL; WAF fires on real attacks only | . Best practice: Fix the code first. Then evaluate whether the Rule Exclusion is still needed. The three vulnerabilities and their fixes . Fix 1 — Parameterise SQL in search_products . The False Positive for O'Brien exists because the search query is interpolated directly into the SQL string. Before (src/app/db.py — intentionally vulnerable): . # f-string injects the query value directly into SQL cursor.execute(f\"SELECT * FROM products WHERE name LIKE '%{query}%'\") . When query = \"O'Brien\" the SQL becomes: . SELECT * FROM products WHERE name LIKE '%O'Brien%' . The unescaped apostrophe breaks the SQL syntax — which is exactly what the WAF sees as a SQLi pattern. After (src/app/db_secure.py): . # Parameterised query — the driver escapes the value safely cursor.execute(\"SELECT * FROM products WHERE name LIKE ?\", [f\"%{query}%\"]) . Now O'Brien is passed as a bound parameter. The driver escapes it. The SQL never contains a raw apostrophe. The WAF rule does not fire because the HTTP request no longer looks like SQLi. Fix 2 — Parameterise SQL in check_login . Same pattern in the login endpoint: . Before: . cursor.execute(f\"SELECT * FROM users WHERE username='{username}' AND password='{password}'\") . After: . cursor.execute(\"SELECT * FROM users WHERE username=? AND password=?\", [username, password]) . Fix 3 — Remove | safe from SEARCH_TEMPLATE and sanitise /file . Before (src/app/app.py): . {# Jinja bypasses auto-escaping — XSS possible #} . # /file endpoint — no path sanitisation name = request.args.get(\"name\", \"\") with open(f\"files/{name}\", \"r\") as f: # path traversal possible . After (src/app/app_secure.py): . {# Jinja auto-encodes &lt;script&gt; → &amp;lt;script&amp;gt; — XSS eliminated #} . import os name = os.path.basename(request.args.get(\"name\", \"\")) # strips ../ sequences . Apply the code fixes . # Verify environment variables are set source &lt;(azd env get-values) # Apply all three fixes and redeploy ./scripts/fix-code.sh . The script: . | Creates .bak backups of db.py and app.py | Copies db_secure.py → db.py and app_secure.py → app.py | Runs azd deploy | . Remove the Rule Exclusion (optional) . After the code fix, the q parameter no longer generates a SQLi signal. You can remove the Rule Exclusion from Section 3: . # Remove the rule exclusion POLICY_ID=$(az network application-gateway show \\ --resource-group \"$AZURE_RESOURCE_GROUP\" \\ --name waf-lab-appgw \\ --query \"firewallPolicy.id\" -o tsv) az network application-gateway waf-policy managed-rule exclusion remove \\ --policy-name \"${POLICY_ID##*/}\" \\ --resource-group \"$AZURE_RESOURCE_GROUP\" \\ --match-variable RequestArgNames \\ --selector q \\ --selector-match-operator Equals . Verify the code fix . # Run the full verify suite ./scripts/verify-code-fix.sh . Expected results: . ✓ PASS [200] O'Brien search — FP eliminated by parameterised SQL ✓ PASS [200] O'Brien Life Vest search ✓ PASS [200] Normal product search — Widget ✓ PASS [403] SQLi OR 1=1 — still blocked by WAF ✓ PASS [403] SQLi UNION SELECT — still blocked by WAF ✓ PASS [403] XSS script tag — still blocked by WAF ✓ PASS [403] Path traversal — still blocked by WAF ✓ PASS [200] Product API — unaffected ✓ PASS [200] Login page — unaffected === Results: 9 passed, 0 failed === . ",
+    "url": "/azure-waf-labs/labs/part3/#section-4--fix-the-underlying-code",
+    
+    "relUrl": "/labs/part3/#section-4--fix-the-underlying-code"
+  },"41": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Code fix verified",
+    "content": "| Request | Before code fix | After code fix | . | O'Brien search | 403 (FP) | 200 OK ✓ | . | ' OR 1=1-- SQLi | 403 (TP) | 403 Forbidden ✓ | . | &lt;script&gt;alert(1)&lt;/script&gt; | 403 (TP) | 403 Forbidden ✓ | . | ../etc/passwd | 403 (TP) | 403 Forbidden ✓ | . | Normal /search?q=Widget | 200 | 200 OK ✓ | . The False Positive is eliminated at the application layer. The WAF is still in Prevention Mode and still blocks real attacks — defence-in-depth is preserved. ",
+    "url": "/azure-waf-labs/labs/part3/#code-fix-verified",
+    
+    "relUrl": "/labs/part3/#code-fix-verified"
+  },"42": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Should you keep or remove the Rule Exclusion?",
+    "content": "| Scenario | Recommendation | . | Code is fixed and deployed | Remove the exclusion — it is no longer needed | . | Code fix is in progress (other envs) | Keep the exclusion as a temporary measure | . | Legacy code that cannot be changed | Keep the exclusion, document the risk | . In production, always prefer the code fix. Exclusions reduce WAF coverage — every exclusion is a small gap in your defence. Track all exclusions in your WAF Policy Bicep module and review them on each DRS ruleset upgrade. To restore the vulnerable app for further testing: . git restore src/app/db.py src/app/app.py &amp;&amp; azd deploy . ",
+    "url": "/azure-waf-labs/labs/part3/#should-you-keep-or-remove-the-rule-exclusion",
+    
+    "relUrl": "/labs/part3/#should-you-keep-or-remove-the-rule-exclusion"
+  },"43": {
+    "doc": "Lab 3 — Prevention & Tuning",
+    "title": "Lab 3 — Prevention & Tuning",
+    "content": " ",
+    "url": "/azure-waf-labs/labs/part3/",
+    
+    "relUrl": "/labs/part3/"
+  },"44": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Lab 1 — Deploy &amp; Baseline",
+    "content": "⏱ ~30 min 🎯 Goal: Deploy stack, verify connectivity, confirm Detection Mode 🔑 Concepts: azd, Detection Mode, Log Analytics Deploy the full infrastructure using azd, verify the Vulnerable App is reachable through the Application Gateway, confirm the WAF Policy is in Detection Mode, and locate the Log Analytics workspace where WAF logs will appear in later labs. ",
+    "url": "/azure-waf-labs/labs/part1/#lab-1--deploy--baseline",
+    
+    "relUrl": "/labs/part1/#lab-1--deploy--baseline"
+  },"45": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Step 1 — Clone and deploy with azd",
+    "content": "git clone https://github.com/cv-gh/azure-waf-labs cd azure-waf-labs azd up . azd up will: . | Prompt you for an environment name (e.g. waflab-dev) and an Azure region. | Provision the resource group and all Bicep resources — Log Analytics workspace, Azure SQL, App Service, and Application Gateway with WAF Policy. | Deploy the Vulnerable App (Flask) to the App Service. | . The deployment takes approximately 10–15 minutes, most of which is the Application Gateway provisioning. ",
+    "url": "/azure-waf-labs/labs/part1/#step-1--clone-and-deploy-with-azd",
+    
+    "relUrl": "/labs/part1/#step-1--clone-and-deploy-with-azd"
+  },"46": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Step 2 — Verify the Vulnerable App via App Gateway",
+    "content": "Once azd up completes, grab the App Gateway public IP and confirm the Vulnerable App is serving traffic: . export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2) curl -s $APPGW_URL/api/products . You should receive a JSON array of products from the Azure SQL database. If you receive an error, check the App Service logs in the portal or run azd monitor. ",
+    "url": "/azure-waf-labs/labs/part1/#step-2--verify-the-vulnerable-app-via-app-gateway",
+    
+    "relUrl": "/labs/part1/#step-2--verify-the-vulnerable-app-via-app-gateway"
+  },"47": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Step 3 — Confirm WAF is in Detection Mode",
+    "content": "az network application-gateway waf-policy show \\ --name $(azd env get-values | grep WAF_POLICY_NAME | cut -d= -f2) \\ --resource-group $(azd env get-values | grep AZURE_RESOURCE_GROUP | cut -d= -f2) \\ --query \"policySettings.mode\" . Expected output: . \"Detection\" . ",
+    "url": "/azure-waf-labs/labs/part1/#step-3--confirm-waf-is-in-detection-mode",
+    
+    "relUrl": "/labs/part1/#step-3--confirm-waf-is-in-detection-mode"
+  },"48": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Detection Mode vs Prevention Mode",
+    "content": "In Detection Mode, the WAF inspects every request and writes a log entry for any rule that matches — but never blocks a request. All traffic passes through regardless of what rules fire. In Prevention Mode (enabled in Lab 3), a rule match causes the WAF to return HTTP 403 Forbidden and stop the request from reaching your application. Always start in Detection Mode so you can observe what the WAF would block before you commit to blocking it. This prevents unexpected False Positives from disrupting legitimate traffic. ",
+    "url": "/azure-waf-labs/labs/part1/#detection-mode-vs-prevention-mode",
+    
+    "relUrl": "/labs/part1/#detection-mode-vs-prevention-mode"
+  },"49": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Step 4 — Navigate to Log Analytics",
+    "content": ". | Open the Azure portal and navigate to the resource group created by azd. | Click the Log Analytics workspace (log-&lt;env-name&gt;). | In the left menu, select Logs. | In the query editor, run the following to confirm the WAF diagnostic connection is working: | . AzureDiagnostics | where ResourceType == \"APPLICATIONGATEWAYS\" | where Category == \"ApplicationGatewayFirewallLog\" | take 10 . The table may be empty at this stage — that is expected. WAF log entries will appear after you fire attack payloads in Lab 2. ",
+    "url": "/azure-waf-labs/labs/part1/#step-4--navigate-to-log-analytics",
+    
+    "relUrl": "/labs/part1/#step-4--navigate-to-log-analytics"
+  },"50": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "No attacks yet — establish your baseline",
+    "content": "This lab establishes your baseline. The Vulnerable App is running, the WAF is in Detection Mode, and logs are flowing to Log Analytics. In Lab 2 you will fire real attack payloads and observe them in these logs as True Positives. ",
+    "url": "/azure-waf-labs/labs/part1/#no-attacks-yet--establish-your-baseline",
+    
+    "relUrl": "/labs/part1/#no-attacks-yet--establish-your-baseline"
+  },"51": {
+    "doc": "Lab 1 — Deploy & Baseline",
+    "title": "Lab 1 — Deploy & Baseline",
+    "content": " ",
+    "url": "/azure-waf-labs/labs/part1/",
+    
+    "relUrl": "/labs/part1/"
+  },"52": {
+    "doc": "Home",
+    "title": "Azure Application Gateway WAFHands-On Lab",
+    "content": "Deploy a vulnerable Flask app behind Azure WAF, fire real attacks, observe True Positives and False Positives, then harden step-by-step using DRS 2.1 best practices. ![Azure](https://img.shields.io/badge/Azure-App_Gateway-0078d4?style=flat-square&amp;logo=microsoftazure&amp;logoColor=white) ![WAF](https://img.shields.io/badge/WAF-DRS_2.1-ff5722?style=flat-square) ![azd](https://img.shields.io/badge/azd-ready-5c2d91?style=flat-square) ![Labs](https://img.shields.io/badge/Labs-5_parts-3f51b5?style=flat-square) ",
+    "url": "/azure-waf-labs/",
+    
+    "relUrl": "/"
+  },"53": {
+    "doc": "Home",
+    "title": "Architecture",
+    "content": "Internet │ ▼ ┌─────────────────────────────────────────────┐ │ Application Gateway (WAF_v2) │ │ WAF Policy · DRS 2.1 · Bot Manager │ │ Rule Exclusions · Custom Rules │ └─────────────────────────────────────────────┘ │ Detection Mode → Prevention Mode ▼ ┌──────────────────────────────┐ │ App Service (Flask) │ │ System-Assigned MSI │ └──────────────────────────────┘ │ Passwordless auth ▼ ┌──────────────────────────────┐ │ Azure SQL Database │ │ Free tier · AAD-only auth │ └──────────────────────────────┘ │ ▼ Log Analytics → Microsoft Sentinel . ",
+    "url": "/azure-waf-labs/#architecture",
+    
+    "relUrl": "/#architecture"
+  },"54": {
+    "doc": "Home",
+    "title": "Labs",
+    "content": "Lab 1 Deploy &amp; Baseline Deploy the full stack with azd up, verify the Vulnerable App, confirm Detection Mode, and locate WAF logs in Log Analytics. azd Detection Mode Log Analytics Lab 2 Attack &amp; Detect Fire SQLi, XSS, and path traversal payloads. Observe every hit as a True Positive in WAF logs — without blocking any traffic. SQLi XSS True Positive KQL Lab 3 Prevention &amp; Tuning Enable Prevention Mode, trigger a real False Positive on O'Brien search, then resolve it with a scoped Rule Exclusion. Prevention Mode False Positive Rule Exclusion Lab 4 Custom Rules Block /admin by IP, rate-limit login brute-force attempts, and geo-filter traffic by country — all with Custom Rules. Custom Rules Rate Limiting Geo-filter Lab 5 Bot &amp; Observability Enable Bot Manager, simulate known-bad bots, build KQL dashboards, create an alert rule, and wire WAF logs to Microsoft Sentinel. Bot Manager Sentinel Azure Monitor KQL ",
+    "url": "/azure-waf-labs/#labs",
+    
+    "relUrl": "/#labs"
+  },"55": {
+    "doc": "Home",
+    "title": "Prerequisites",
+    "content": "| Requirement | Notes | . | Azure subscription | Contributor role on a resource group | . | Azure CLI (az) | v2.50+ | . | Azure Developer CLI (azd) | v1.9+ | . | Python 3.12+ | For local test scripts | . | bash | Git Bash on Windows is sufficient | . Cost: Application Gateway WAF_v2 costs approximately $0.36/hr plus gateway capacity units. Run azd down at the end of every session. App Service B1 and Azure SQL Free tier add minimal cost. ",
+    "url": "/azure-waf-labs/#prerequisites",
+    
+    "relUrl": "/#prerequisites"
+  },"56": {
+    "doc": "Home",
+    "title": "Best Practices Coverage",
+    "content": "Every recommendation from the MS WAF best practices page is demonstrated: . | Best Practice | Lab | . | Enable the WAF | Lab 1 | . | Use WAF Policies (not legacy config) | Lab 1 | . | Use Detection Mode for initial tuning | Labs 1–2 | . | Tune with Rule Exclusions | Lab 3 | . | Use Prevention Mode in production | Lab 3 | . | Define WAF configuration as code (Bicep) | Lab 3 | . | Enable core rule sets (DRS 2.1) | Lab 1 | . | Use the latest ruleset version | Lab 1 | . | Enable bot management rules | Lab 5 | . | Geo-filter traffic | Lab 4 | . | Add diagnostic settings → Log Analytics | Lab 1 | . | Send logs to Microsoft Sentinel | Lab 5 | . ",
+    "url": "/azure-waf-labs/#best-practices-coverage",
+    
+    "relUrl": "/#best-practices-coverage"
+  },"57": {
+    "doc": "Home",
+    "title": "Home",
+    "content": " ",
+    "url": "/azure-waf-labs/",
+    
+    "relUrl": "/"
+  },"58": {
+    "doc": "Labs",
+    "title": "Labs",
+    "content": "Five hands-on labs that take you from WAF deployment to production-grade hardening — covering every recommendation from the MS WAF best practices page. | Lab | Time | What you do | . | Lab 1 — Deploy &amp; Baseline | ~30 min | Deploy with azd up, verify connectivity, confirm Detection Mode | . | Lab 2 — Attack &amp; Detect | ~20 min | Fire SQLi, XSS, path traversal — observe True Positives in WAF logs | . | Lab 3 — Prevention &amp; Tuning | ~40 min | Enable Prevention Mode, resolve an O’Brien False Positive with Rule Exclusion | . | Lab 4 — Custom Rules | ~30 min | IP block, rate-limit, geo-filter with Custom Rules | . | Lab 5 — Bot &amp; Observability | ~45 min | Bot Manager, KQL dashboards, alerting, Sentinel, azd down | . ",
+    "url": "/azure-waf-labs/labs/",
+    
+    "relUrl": "/labs/"
+  }
+}
