@@ -1,5 +1,13 @@
 name: azure-waf-labs
 
+hooks:
+  preprovision:
+    shell: sh
+    run: |
+      OID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
+      azd env set SQL_AAD_ADMIN_OBJECT_ID "$OID"
+      echo "Set SQL_AAD_ADMIN_OBJECT_ID=$OID"
+
 services:
   app:
     project: src/app
