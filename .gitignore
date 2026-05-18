@@ -52,8 +52,6 @@ _site/
 .DS_Store
 Thumbs.db
 
-# Test / coverage
-.pytest_cache/
-.coverage
-htmlcov/
-*.log
+# App Service log downloads
+app-logs/
+*.zip
