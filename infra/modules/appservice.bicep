@@ -14,6 +14,8 @@ param databaseName string
 param logWorkspaceId string
 
 // ── App Service Plan ───────────────────────────────────────────────────────
+var uniqueSuffix = substring(uniqueString(resourceGroup().id), 0, 6)
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: 'asp-${environmentName}'
   location: location
@@ -29,7 +31,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 
 // ── App Service ────────────────────────────────────────────────────────────
 resource appService 'Microsoft.Web/sites@2023-01-01' = {
-  name: 'app-${environmentName}'
+  name: 'app-${environmentName}-${uniqueSuffix}'
   location: location
   kind: 'app,linux'
   identity: {
