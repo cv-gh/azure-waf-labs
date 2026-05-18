@@ -27,6 +27,10 @@ ADMIN_TEMPLATE = """
 def create_app(db):
     app = Flask(__name__)
 
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"}), 200
+
     @app.route("/api/products")
     def products():
         return jsonify(db.get_products())

@@ -45,7 +45,7 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: 'PYTHON|3.12'
-      appCommandLine: 'bash startup.sh'
+      appCommandLine: ''
       alwaysOn: true
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
@@ -65,6 +65,10 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
+        }
+        {
+          name: 'WEBSITE_HEALTHCHECK_PATH'
+          value: '/health'
         }
       ]
     }
