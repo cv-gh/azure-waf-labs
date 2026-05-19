@@ -60,6 +60,7 @@ var backendPoolName = 'backendPool'
 var backendHttpSettingsName = 'backendHttpSettings'
 var httpListenerName = 'httpListener'
 var routingRuleName = 'routingRule'
+var healthProbeName = 'healthProbe'
 
 resource appGateway 'Microsoft.Network/applicationGateways@2023-11-01' = {
   name: agwName
@@ -117,11 +118,30 @@ resource appGateway 'Microsoft.Network/applicationGateways@2023-11-01' = {
       {
         name: backendHttpSettingsName
         properties: {
-          port: 80
-          protocol: 'Http'
+          port: 443
+          protocol: 'Https'
           cookieBasedAffinity: 'Disabled'
           pickHostNameFromBackendAddress: true
           requestTimeout: 30
+          probe: {
+            id: resourceId('Microsoft.Network/applicationGateways/probes', agwName, healthProbeName)
+          }
+        }
+      }
+    ]
+    probes: [
+      {
+        name: healthProbeName
+        properties: {
+          protocol: 'Https'
+          path: '/health'
+          interval: 30
+          timeout: 30
+          unhealthyThreshold: 3
+          pickHostNameFromBackendHttpSettings: true
+          match: {
+            statusCodes: ['200-399']
+          }
         }
       }
     ]
