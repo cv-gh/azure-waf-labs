@@ -1,34 +1,17 @@
 import os
-from flask import Flask, jsonify, request, render_template_string
-
-# Secure version: {{ query }} uses Jinja2 auto-escaping (HTML-encodes output).
-# The vulnerable version used {{ query | safe }} which bypassed escaping and
-# allowed reflected XSS payloads to render in the browser.
-SEARCH_TEMPLATE = """
-<html><body>
-<h1>Search Results for: {{ query }}</h1>
-<ul>{% for p in products %}<li>{{ p.name }} - ${{ p.price }}</li>{% endfor %}</ul>
-</body></html>
-"""
-
-LOGIN_TEMPLATE = """
-<html><body>
-<h1>Login</h1>
-<form method="post">
-  <input name="username" placeholder="Username">
-  <input name="password" type="password" placeholder="Password">
-  <button type="submit">Login</button>
-</form>
-</body></html>
-"""
-
-ADMIN_TEMPLATE = """
-<html><body><h1>Admin Panel</h1><p>Welcome, admin.</p></body></html>
-"""
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 
 def create_app(db):
     app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return redirect(url_for("search"))
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"}), 200
 
     @app.route("/api/products")
     def products():
@@ -38,36 +21,44 @@ def create_app(db):
     def search():
         query = request.args.get("q", "")
         results = db.search_products(query)
-        return render_template_string(SEARCH_TEMPLATE, query=query, products=results)
+        # Secure: plain string → Jinja2 autoescaping prevents XSS
+        return render_template("search.html", query=query, products=results,
+                               active="search", vuln=False)
 
     @app.route("/file")
     def file_read():
         name = request.args.get("name", "")
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        # Sanitised: restrict to basename only — path traversal is not possible
+        # Sanitised: restrict to basename only — path traversal not possible
         name = os.path.basename(name)
         path = os.path.join(base_dir, name)
         try:
             with open(path, "r") as f:
                 content = f.read()
-            return content, 200, {"Content-Type": "text/plain"}
+            return render_template("file.html", filename=name, content=content,
+                                   active="file", vuln=False)
         except FileNotFoundError:
-            return "File not found", 404
+            return render_template("file.html", filename=name, error="File not found",
+                                   active="file", vuln=False), 404
         except Exception:
-            return "Error reading file", 500
+            return render_template("file.html", filename=name, error="Error reading file",
+                                   active="file", vuln=False), 500
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "GET":
-            return render_template_string(LOGIN_TEMPLATE)
+            return render_template("login.html", active="login", vuln=False)
         username = request.form.get("username", "")
         password = request.form.get("password", "")
         if db.check_login(username, password):
-            return "Login successful", 200
-        return "Invalid credentials", 401
+            return render_template("login.html", success="Login successful! Welcome back.",
+                                   prefill_username=username, active="login", vuln=False)
+        return render_template("login.html", error="Invalid username or password.",
+                               prefill_username=username, active="login", vuln=False), 401
 
     @app.route("/admin")
     def admin():
-        return render_template_string(ADMIN_TEMPLATE)
+        products = db.get_products()
+        return render_template("admin.html", products=products, active="admin", vuln=False)
 
     return app

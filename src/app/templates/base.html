@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ShopZone{% endblock %} — ShopZone</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Lab bar ── */
+    .lab-bar {
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 0.72rem;
+      padding: 6px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .lab-bar .lab-title { color: #e2e8f0; font-weight: 600; letter-spacing: 0.02em; }
+    .lab-bar .sep { color: #334155; }
+    .lab-bar a { color: #60a5fa; text-decoration: none; }
+    .lab-bar a:hover { color: #93c5fd; text-decoration: underline; }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 56px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04);
+    }
+    .nav-brand {
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.04em;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .nav-link {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 11px;
+      border-radius: 6px;
+      transition: background 0.1s, color 0.1s;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: var(--bg); color: var(--text); }
+    .nav-link.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+    .nav-spacer { flex: 1; }
+
+    /* ── Container ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 36px 20px; }
+    .container-narrow { max-width: 420px; margin: 0 auto; padding: 48px 20px; }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-header .subtitle { color: var(--text-muted); font-size: 0.875rem; margin-top: 4px; }
+
+    /* ── Lab callout ── */
+    .lab-callout {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--warning-light);
+      border: 1px solid #fde68a;
+      border-left: 3px solid var(--warning);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-size: 0.825rem;
+      color: #78350f;
+      line-height: 1.5;
+    }
+    .lab-callout .lc-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .lab-callout strong { font-weight: 600; }
+    .lab-callout code {
+      background: rgba(0,0,0,.06);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      font-size: 0.875rem; font-weight: 500;
+      cursor: pointer; text-decoration: none; white-space: nowrap;
+      transition: background 0.1s, box-shadow 0.1s;
+      line-height: 1.4;
+    }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+    .btn-outline { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-lg { padding: 12px 24px; font-size: 0.95rem; }
+
+    /* ── Search ── */
+    .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search-input {
+      flex: 1; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 0.95rem; background: var(--surface); color: var(--text);
+      outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .search-input::placeholder { color: #cbd5e1; }
+    .result-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px; }
+
+    /* ── Product grid ── */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .product-card:hover { box-shadow: var(--shadow-md); border-color: #cbd5e1; }
+    .product-icon { font-size: 1.75rem; margin-bottom: 12px; }
+    .product-name { font-weight: 600; font-size: 0.925rem; color: var(--text); margin-bottom: 6px; }
+    .product-price { color: var(--primary); font-size: 1.1rem; font-weight: 700; }
+    .product-id { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 64px 24px; color: var(--text-muted); }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 14px; opacity: .5; }
+    .empty-state h3 { font-size: 1rem; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .empty-state p { font-size: 0.875rem; }
+
+    /* ── Auth card ── */
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+    }
+    .auth-card h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .auth-subtitle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 28px; }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 0.825rem; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.9rem; color: var(--text); background: var(--surface);
+      outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .form-input::placeholder { color: #94a3b8; }
+    .form-hint { font-size: 0.775rem; color: var(--text-muted); margin-top: 5px; }
+    .form-divider { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin: 20px 0; }
+
+    /* ── Alerts ── */
+    .alert { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 16px; }
+    .alert-error { background: var(--danger-light); border: 1px solid #fecaca; color: var(--danger); }
+    .alert-success { background: var(--success-light); border: 1px solid #bbf7d0; color: var(--success); }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .stat-label { font-size: 0.725rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .stat-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; color: var(--text); line-height: 1; }
+    .stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* ── Table card ── */
+    .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .table-card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 0.875rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: var(--bg); padding: 10px 20px; text-align: left; font-weight: 500; color: var(--text-muted); font-size: 0.775rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg); }
+
+    /* ── File viewer ── */
+    .file-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .file-header { padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+    .file-header .file-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot-red { background: #f87171; }
+    .dot-yellow { background: #fbbf24; }
+    .dot-green { background: #4ade80; }
+    .file-name { font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace; color: var(--text-muted); margin-left: 4px; }
+    .file-body { padding: 20px; font-size: 0.825rem; font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace; white-space: pre-wrap; word-break: break-word; color: var(--text); line-height: 1.65; max-height: 480px; overflow-y: auto; }
+    .file-error { padding: 20px; color: var(--text-muted); font-style: italic; font-size: 0.875rem; }
+
+    /* ── Badge ── */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge-vuln { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-safe { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .product-grid { grid-template-columns: 1fr 1fr; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .search-form { flex-direction: column; }
+      .container { padding: 20px 14px; }
+      .container-narrow { padding: 24px 14px; }
+      .nav-link { padding: 5px 8px; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lab-bar">
+    <span class="lab-title">🛡️ Azure WAF Lab</span>
+    <span class="sep">|</span>
+    <a href="/search">Search (SQLi+XSS)</a>
+    <span class="sep">·</span>
+    <a href="/login">Login (SQLi)</a>
+    <span class="sep">·</span>
+    <a href="/file?name=readme.txt">File (Path Traversal)</a>
+    <span class="sep">·</span>
+    <a href="/api/products">Products API</a>
+  </div>
+
+  <nav class="navbar">
+    <a href="/" class="nav-brand">ShopZone</a>
+    <a href="/search" class="nav-link {% if active == 'search' %}active{% endif %}">Search</a>
+    <a href="/login" class="nav-link {% if active == 'login' %}active{% endif %}">Login</a>
+    <a href="/admin" class="nav-link {% if active == 'admin' %}active{% endif %}">Admin</a>
+    <a href="/file?name=readme.txt" class="nav-link {% if active == 'file' %}active{% endif %}">Files</a>
+    <div class="nav-spacer"></div>
+    {% if vuln is defined and not vuln %}
+      <span class="badge badge-safe">✓ Secured</span>
+    {% else %}
+      <span class="badge badge-vuln">⚠ Vulnerable</span>
+    {% endif %}
+  </nav>
+
+  {% block content %}{% endblock %}
+
+</body>
+</html>

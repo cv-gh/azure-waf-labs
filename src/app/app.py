@@ -1,27 +1,6 @@
 import os
-from flask import Flask, jsonify, redirect, request, render_template_string, url_for
-
-SEARCH_TEMPLATE = """
-<html><body>
-<h1>Search Results for: {{ query | safe }}</h1>
-<ul>{% for p in products %}<li>{{ p.name }} - ${{ p.price }}</li>{% endfor %}</ul>
-</body></html>
-"""
-
-LOGIN_TEMPLATE = """
-<html><body>
-<h1>Login</h1>
-<form method="post">
-  <input name="username" placeholder="Username">
-  <input name="password" type="password" placeholder="Password">
-  <button type="submit">Login</button>
-</form>
-</body></html>
-"""
-
-ADMIN_TEMPLATE = """
-<html><body><h1>Admin Panel</h1><p>Welcome, admin.</p></body></html>
-"""
+from flask import Flask, jsonify, redirect, render_template, request, url_for
+from markupsafe import Markup
 
 
 def create_app(db):
@@ -43,7 +22,9 @@ def create_app(db):
     def search():
         query = request.args.get("q", "")
         results = db.search_products(query)
-        return render_template_string(SEARCH_TEMPLATE, query=query, products=results)
+        # Intentionally vulnerable: Markup() bypasses Jinja2 autoescaping → reflected XSS
+        return render_template("search.html", query=Markup(query), products=results,
+                               active="search", vuln=True)
 
     @app.route("/file")
     def file_read():
@@ -54,24 +35,30 @@ def create_app(db):
         try:
             with open(path, "r") as f:
                 content = f.read()
-            return content, 200, {"Content-Type": "text/plain"}
+            return render_template("file.html", filename=name, content=content,
+                                   active="file", vuln=True)
         except FileNotFoundError:
-            return "File not found", 404
+            return render_template("file.html", filename=name, error="File not found",
+                                   active="file", vuln=True), 404
         except Exception:
-            return "Error reading file", 500
+            return render_template("file.html", filename=name, error="Error reading file",
+                                   active="file", vuln=True), 500
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "GET":
-            return render_template_string(LOGIN_TEMPLATE)
+            return render_template("login.html", active="login", vuln=True)
         username = request.form.get("username", "")
         password = request.form.get("password", "")
         if db.check_login(username, password):
-            return "Login successful", 200
-        return "Invalid credentials", 401
+            return render_template("login.html", success="Login successful! Welcome back.",
+                                   prefill_username=username, active="login", vuln=True)
+        return render_template("login.html", error="Invalid username or password.",
+                               prefill_username=username, active="login", vuln=True), 401
 
     @app.route("/admin")
     def admin():
-        return render_template_string(ADMIN_TEMPLATE)
+        products = db.get_products()
+        return render_template("admin.html", products=products, active="admin", vuln=True)
 
     return app

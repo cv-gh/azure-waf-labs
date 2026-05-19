@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}File Viewer{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="lab-callout">
+    <span class="lc-icon">⚡</span>
+    <div>
+      <strong>Lab Demo: Path Traversal</strong>
+      The <code>name</code> parameter is passed directly to <code>os.path.join()</code> without
+      sanitisation. Try <code>?name=../../../etc/passwd</code> to read arbitrary files from the server.
+    </div>
+  </div>
+
+  <div class="page-header">
+    <h1>File Viewer</h1>
+    <p class="subtitle">View server-side files by name</p>
+  </div>
+
+  <form class="search-form" method="get" action="/file" style="margin-bottom:24px;">
+    <input
+      class="search-input"
+      type="text"
+      name="name"
+      value="{{ filename or '' }}"
+      placeholder="filename e.g. readme.txt"
+    >
+    <button class="btn btn-primary" type="submit">Load File</button>
+  </form>
+
+  {% if filename %}
+  <div class="file-card">
+    <div class="file-header">
+      <span class="file-dot dot-red"></span>
+      <span class="file-dot dot-yellow"></span>
+      <span class="file-dot dot-green"></span>
+      <span class="file-name">{{ filename }}</span>
+    </div>
+    {% if error %}
+      <div class="file-error">{{ error }}</div>
+    {% else %}
+      <div class="file-body">{{ content }}</div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📄</div>
+    <h3>No file selected</h3>
+    <p>Enter a filename above. Try <a href="/file?name=readme.txt">readme.txt</a>.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

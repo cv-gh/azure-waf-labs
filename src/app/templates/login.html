@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+
+  <div class="auth-card">
+    <h1>Sign in</h1>
+    <p class="auth-subtitle">Access your ShopZone account</p>
+
+    <div class="lab-callout" style="margin-bottom: 24px;">
+      <span class="lc-icon">⚡</span>
+      <div>
+        <strong>Lab Demo: SQL Injection — Auth Bypass</strong>
+        The login query uses f-string interpolation. Try username
+        <code>' OR '1'='1' --</code> with any password to bypass authentication.
+      </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+      <span>⚠</span> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if success %}
+    <div class="alert alert-success">
+      <span>✓</span> {{ success }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/login">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input
+          class="form-input"
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Enter username"
+          autocomplete="username"
+          value="{{ prefill_username or '' }}"
+        >
+        <p class="form-hint">Hint: try <code style="font-size:.75rem;background:#f1f5f9;padding:1px 4px;border-radius:3px;">admin</code> or <code style="font-size:.75rem;background:#f1f5f9;padding:1px 4px;border-radius:3px;">user1</code></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input
+          class="form-input"
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter password"
+          autocomplete="current-password"
+        >
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" type="submit">Sign in</button>
+    </form>
+
+    <div class="form-divider">— or —</div>
+    <a href="/admin" class="btn btn-outline btn-full">Go to Admin Panel</a>
+  </div>
+
+</div>
+{% endblock %}

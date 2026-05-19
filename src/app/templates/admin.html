@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="lab-callout">
+    <span class="lc-icon">⚡</span>
+    <div>
+      <strong>Lab Demo: Broken Access Control</strong>
+      This admin panel has no authentication — it is directly accessible at <code>/admin</code>.
+      WAF rules can restrict access by path pattern or source IP.
+    </div>
+  </div>
+
+  <div class="page-header">
+    <h1>Admin Panel</h1>
+    <p class="subtitle">ShopZone back-office dashboard</p>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Products</div>
+      <div class="stat-value">{{ products|length if products else 5 }}</div>
+      <div class="stat-sub">in catalog</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Users</div>
+      <div class="stat-value">2</div>
+      <div class="stat-sub">registered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">WAF Mode</div>
+      <div class="stat-value" style="font-size:1.1rem;padding-top:4px;">Detection</div>
+      <div class="stat-sub">App Gateway</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Status</div>
+      <div class="stat-value" style="font-size:1.1rem;color:var(--success);padding-top:4px;">Online</div>
+      <div class="stat-sub">all systems</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header">
+      <span>Product Catalog</span>
+      <a href="/api/products" class="btn btn-outline" style="padding:5px 12px;font-size:0.8rem;">View API →</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if products %}
+          {% for p in products %}
+          <tr>
+            <td style="color:var(--text-muted);font-family:monospace;font-size:.8rem;">#{{ "%04d" | format(p.id) }}</td>
+            <td>{{ p.name }}</td>
+            <td style="color:var(--primary);font-weight:600;">${{ "%.2f" | format(p.price) }}</td>
+            <td>
+              <a href="/search?q={{ p.name }}" class="btn btn-outline" style="padding:4px 10px;font-size:.775rem;">Search</a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">
+              No products loaded
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

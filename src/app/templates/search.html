@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Search Products{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="lab-callout">
+    <span class="lc-icon">⚡</span>
+    <div>
+      <strong>Lab Demo: SQL Injection &amp; Reflected XSS</strong>
+      The search query is interpolated directly into SQL (<code>LIKE '%{query}%'</code>) and
+      reflected into the page without escaping. Try <code>' OR '1'='1</code> for SQLi,
+      or <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> for XSS.
+    </div>
+  </div>
+
+  <div class="page-header">
+    <h1>Product Search</h1>
+    <p class="subtitle">Browse our catalog of premium outdoor gear</p>
+  </div>
+
+  <form class="search-form" method="get" action="/search">
+    <input
+      class="search-input"
+      type="text"
+      name="q"
+      value="{{ query }}"
+      placeholder="Search products… try 'Widget' or 'Board'"
+      autofocus
+    >
+    <button class="btn btn-primary btn-lg" type="submit">Search</button>
+  </form>
+
+  {% if query %}
+    <p class="result-meta">
+      Showing {{ products|length }} result{{ 's' if products|length != 1 else '' }} for
+      "<strong>{{ query }}</strong>"
+    </p>
+  {% endif %}
+
+  {% if products %}
+    <div class="product-grid">
+      {% for p in products %}
+      <div class="product-card">
+        <div class="product-icon">
+          {% if 'Widget' in p.name %}🔧
+          {% elif 'Gadget' in p.name %}📱
+          {% elif 'Board' in p.name %}🏄
+          {% elif 'Vest' in p.name or 'Life' in p.name %}🦺
+          {% elif 'Donut' in p.name %}🍩
+          {% else %}📦
+          {% endif %}
+        </div>
+        <div class="product-name">{{ p.name }}</div>
+        <div class="product-price">${{ "%.2f" | format(p.price) }}</div>
+        <div class="product-id">SKU #{{ "%04d" | format(p.id) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+  {% elif query %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No results found</h3>
+      <p>No products matched "{{ query }}". Try a different term.</p>
+    </div>
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🛍️</div>
+      <h3>Search the catalog</h3>
+      <p>Enter a keyword above to find products — or try <a href="/search?q=">browsing all</a>.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
