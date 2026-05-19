@@ -100,12 +100,14 @@ cursor.execute(
 
 **File:** `src/app/app.py`
 
-```jinja
-{# VULNERABLE: | safe disables Jinja2 auto-escaping #}
-<h1>Search Results for: {{ query | safe }}</h1>
+```python
+# VULNERABLE: Markup() wraps the raw query, telling Jinja2 it is pre-safe HTML
+# Result: {{ query }} in the template renders as raw HTML — XSS executes
+from markupsafe import Markup
+return render_template("search.html", query=Markup(query), ...)
 ```
 
-A query like `<script>alert(document.cookie)</script>` renders as raw HTML in the browser. The WAF blocks rule **941100** in Prevention Mode — but if the WAF were bypassed the payload executes.
+A query like `<script>alert(document.cookie)</script>` renders as executable HTML in the browser. The WAF blocks rule **941100** in Prevention Mode — but if the WAF were bypassed the payload executes.
 
 ```python
 # VULNERABLE: no path sanitisation on /file endpoint
@@ -113,11 +115,11 @@ name = request.args.get("name", "")
 path = os.path.join(base_dir, name)   # ../../etc/passwd works
 ```
 
-**Fix — remove `| safe` and sanitise path:**
+**Fix — pass plain string and sanitise path:**
 
-```jinja
-{# SECURE: Jinja2 auto-encodes < > & " ' #}
-<h1>Search Results for: {{ query }}</h1>
+```python
+# SECURE: plain Python string → Jinja2 HTML-encodes on render → XSS eliminated
+return render_template("search.html", query=query, ...)
 ```
 
 ```python
@@ -144,7 +146,7 @@ What the script does:
 |---|---|
 | Backup originals | `db.py.bak`, `app.py.bak` created |
 | Apply `db_secure.py` | Parameterised SQL for `search_products` and `check_login` |
-| Apply `app_secure.py` | `\| safe` removed, `os.path.basename()` added |
+| Apply `app_secure.py` | Removes `Markup()` XSS bypass, adds `os.path.basename()` path sanitisation |
 | Redeploy | `azd deploy` pushes the updated Flask app |
 
 ---

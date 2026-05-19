@@ -8,7 +8,7 @@ permalink: /labs/
 
 # Labs
 
-Five hands-on labs that take you from WAF deployment to production-grade hardening — covering every recommendation from the [MS WAF best practices page](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices).
+Six hands-on labs that take you from WAF deployment to production-grade hardening — covering every recommendation from the [MS WAF best practices page](https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/best-practices).
 
 | Lab | Time | What you do |
 |-----|------|-------------|

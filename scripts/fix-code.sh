@@ -4,7 +4,7 @@
 #
 # What it fixes:
 #   1. db.py   — parameterised SQL in search_products and check_login
-#   2. app.py  — removes | safe filter from SEARCH_TEMPLATE (restores XSS escaping)
+#   2. app.py  — removes Markup() XSS bypass (restores Jinja2 auto-escaping for query)
 #   3. app.py  — adds os.path.basename() sanitisation to /file endpoint
 #
 # After this script, O'Brien search returns 200 without any WAF Rule Exclusion.
@@ -44,9 +44,9 @@ echo ""
 echo "--- Fix 2: Remove | safe filter + sanitise /file in app.py (restores XSS escaping) ---"
 cp "$REPO_ROOT/src/app/app.py" "$REPO_ROOT/src/app/app.py.bak"
 cp "$REPO_ROOT/src/app/app_secure.py" "$REPO_ROOT/src/app/app.py"
-echo "  Before: {{ query | safe }}  (bypasses Jinja2 auto-escaping)"
-echo "  After:  {{ query }}          (Jinja2 HTML-encodes output)"
-echo "✓ app.py updated — auto-escaping restored, path traversal sanitised"
+echo "  Before: Markup(query) passed to render_template() — Jinja2 skips escaping → XSS"
+echo "  After:  plain query string — Jinja2 HTML-encodes on render → XSS eliminated"
+echo "✓ app.py updated — Markup() XSS bypass removed, path traversal sanitised"
 
 echo ""
 echo "=== Redeploying Flask app with code fixes ==="

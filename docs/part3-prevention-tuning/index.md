@@ -234,33 +234,36 @@ Same pattern in the login endpoint:
 **Before:**
 
 ```python
-cursor.execute(f"SELECT * FROM users WHERE username='{username}' AND password='{password}'")
+cursor.execute(f"SELECT * FROM users WHERE username='{username}' AND password_hash='{password}'")
 ```
 
 **After:**
 
 ```python
-cursor.execute("SELECT * FROM users WHERE username=? AND password=?", [username, password])
+cursor.execute("SELECT * FROM users WHERE username=? AND password_hash=?", [username, password])
 ```
 
-#### Fix 3 — Remove `| safe` from SEARCH_TEMPLATE and sanitise `/file`
+#### Fix 3 — Remove `Markup()` XSS bypass and sanitise `/file`
 
 **Before (`src/app/app.py`):**
 
-```jinja
-{{ query | safe }}   {# Jinja bypasses auto-escaping — XSS possible #}
+```python
+# app.py: Markup() marks the raw query as pre-safe HTML → Jinja2 skips escaping → XSS possible
+from markupsafe import Markup
+return render_template("search.html", query=Markup(query), ...)
 ```
 
 ```python
 # /file endpoint — no path sanitisation
 name = request.args.get("name", "")
-with open(f"files/{name}", "r") as f:   # path traversal possible
+path = os.path.join(base_dir, name)   # ../../etc/passwd works
 ```
 
 **After (`src/app/app_secure.py`):**
 
-```jinja
-{{ query }}   {# Jinja auto-encodes <script> → &lt;script&gt; — XSS eliminated #}
+```python
+# app_secure.py: plain Python string → Jinja2 HTML-encodes on render → XSS eliminated
+return render_template("search.html", query=query, ...)
 ```
 
 ```python
