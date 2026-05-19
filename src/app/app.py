@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, request, render_template_string
+from flask import Flask, jsonify, redirect, request, render_template_string, url_for
 
 SEARCH_TEMPLATE = """
 <html><body>
@@ -26,6 +26,10 @@ ADMIN_TEMPLATE = """
 
 def create_app(db):
     app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return redirect(url_for("search"))
 
     @app.route("/health")
     def health():
