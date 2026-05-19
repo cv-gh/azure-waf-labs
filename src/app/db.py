@@ -1,5 +1,5 @@
 import os
-import pymssql
+from mssql_python import connect
 
 
 def _get_connection():
@@ -8,24 +8,23 @@ def _get_connection():
     database = os.environ["AZURE_SQL_DATABASE"]
 
     if os.environ.get("AZURE_SQL_USE_MSI", "").lower() == "true":
-        from azure.identity import ManagedIdentityCredential
-        credential = ManagedIdentityCredential()
-        token = credential.get_token("https://database.windows.net/.default")
-        return pymssql.connect(
-            server=server,
-            port=1433,
-            database=database,
-            accesstoken=token.token,
+        conn_str = (
+            f"Server={server},1433;"
+            f"Database={database};"
+            f"Authentication=ActiveDirectoryMSI;"
+            f"Encrypt=yes;TrustServerCertificate=no;"
         )
-
-    # SQL auth fallback for local development
-    return pymssql.connect(
-        server=server,
-        port=1433,
-        database=database,
-        user=os.environ.get("AZURE_SQL_USER", "sa"),
-        password=os.environ["AZURE_SQL_PASSWORD"],
-    )
+    else:
+        # SQL auth fallback for local development
+        user = os.environ.get("AZURE_SQL_USER", "sa")
+        password = os.environ["AZURE_SQL_PASSWORD"]
+        conn_str = (
+            f"Server={server},1433;"
+            f"Database={database};"
+            f"UID={user};PWD={password};"
+            f"Encrypt=yes;TrustServerCertificate=yes;"
+        )
+    return connect(conn_str)
 
 
 def seed(conn):
@@ -45,7 +44,7 @@ def seed(conn):
     cursor.execute("SELECT COUNT(*) FROM products")
     if cursor.fetchone()[0] == 0:
         cursor.executemany(
-            "INSERT INTO products (name, price, description) VALUES (%s, %s, %s)",
+            "INSERT INTO products (name, price, description) VALUES (?, ?, ?)",
             [
                 ("Widget Pro", 9.99, "A standard widget for everyday use"),
                 ("Gadget Elite", 19.99, "Advanced gadget with extra features"),
@@ -68,7 +67,7 @@ def seed(conn):
     if cursor.fetchone()[0] == 0:
         # Password stored as plaintext intentionally (this is a vulnerable demo app)
         cursor.executemany(
-            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
             [("admin", "correct"), ("user1", "password123")],
         )
 

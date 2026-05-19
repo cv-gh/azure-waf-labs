@@ -1,5 +1,4 @@
 import os
-import pymssql
 
 from db import _get_connection, seed
 
@@ -29,7 +28,7 @@ class SqlDb:
         try:
             # Parameterised: apostrophes are data, not SQL syntax — no SQLi, no WAF FP
             cursor.execute(
-                "SELECT id, name, price FROM products WHERE name LIKE %s",
+                "SELECT id, name, price FROM products WHERE name LIKE ?",
                 (f"%{query}%",),
             )
             rows = cursor.fetchall()
@@ -44,7 +43,7 @@ class SqlDb:
         try:
             # Parameterised: login injection (e.g. ' OR 1=1--) is impossible
             cursor.execute(
-                "SELECT COUNT(*) FROM users WHERE username=%s AND password_hash=%s",
+                "SELECT COUNT(*) FROM users WHERE username=? AND password_hash=?",
                 (username, password),
             )
             count = cursor.fetchone()[0]
