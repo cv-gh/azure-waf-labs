@@ -4,41 +4,31 @@ param environmentName string
 @description('Azure region for the SQL resources')
 param location string
 
-@description('Azure AD object ID of the SQL AAD administrator')
-param sqlAadAdminObjectId string
+@description('Display name of the App Service (used as the SQL AAD admin login label)')
+param appServiceName string
 
-@description('Object ID of the App Service system-assigned managed identity')
+@description('Object ID of the App Service system-assigned managed identity — becomes the SQL AAD admin')
 param appServicePrincipalId string
 
-@description('SQL Server administrator login name')
-param sqlAdminLogin string = 'sqladmin'
-
-@description('SQL Server administrator password')
-@secure()
-param sqlAdminPassword string
-
 // Built-in Azure RBAC role: SQL DB Contributor
-// Grants the MSI permission to connect; T-SQL db_datareader/db_datawriter
-// should be granted via a post-deployment script or azd hook.
 var sqlDbContributorRoleId = '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
 
 var uniqueSuffix = substring(uniqueString(resourceGroup().id), 0, 6)
 
 // ── SQL Server ─────────────────────────────────────────────────────────────
+// The App Service MSI is set as the AAD admin so it can connect without
+// a separate CREATE USER step, satisfying the MCAPS AAD-only-auth policy.
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: 'sql-${environmentName}-${uniqueSuffix}'
   location: location
   properties: {
-    administratorLogin: sqlAdminLogin
-    administratorLoginPassword: sqlAdminPassword
-    // AAD admin is set alongside SQL auth (azureADOnlyAuthentication: false)
-    administrators: !empty(sqlAadAdminObjectId) ? {
+    administrators: {
       administratorType: 'ActiveDirectory'
-      login: 'aad-admin'
-      sid: sqlAadAdminObjectId
+      login: appServiceName
+      sid: appServicePrincipalId
       tenantId: subscription().tenantId
-      azureADOnlyAuthentication: false
-    } : null
+      azureADOnlyAuthentication: true
+    }
     minimalTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
   }

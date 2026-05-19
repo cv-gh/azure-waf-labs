@@ -1,54 +1,5 @@
 name: azure-waf-labs
 
-hooks:
-  preprovision:
-    shell: pwsh
-    run: |
-      $oid = az ad signed-in-user show --query id -o tsv
-      azd env set SQL_AAD_ADMIN_OBJECT_ID $oid
-      Write-Host "Set SQL_AAD_ADMIN_OBJECT_ID=$oid"
-
-  postprovision:
-    shell: pwsh
-    run: |
-      # Parse azd env values into a hashtable
-      $env = @{}
-      azd env get-values | ForEach-Object {
-        if ($_ -match '^([^=]+)="?([^"]*)"?$') { $env[$Matches[1]] = $Matches[2] }
-      }
-      $sqlFqdn  = $env['AZURE_SQL_SERVER']
-      $database = $env['AZURE_SQL_DATABASE']
-
-      # Derive App Service name: tagged resource in the resource group
-      $rg      = "rg-$($env['AZURE_ENV_NAME'])"
-      $appName = az webapp list --resource-group $rg --query "[?tags.\"azd-service-name\"=='app'].name|[0]" -o tsv 2>$null
-
-      if (-not $sqlFqdn -or -not $appName) {
-        Write-Host "Skipping SQL user setup (SQL server or App Service not found yet)"
-        exit 0
-      }
-
-      $sql = "IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '$appName') BEGIN CREATE USER [$appName] FROM EXTERNAL PROVIDER; ALTER ROLE db_datareader ADD MEMBER [$appName]; ALTER ROLE db_datawriter ADD MEMBER [$appName]; ALTER ROLE db_ddladmin ADD MEMBER [$appName]; PRINT 'Created SQL user $appName'; END ELSE PRINT 'SQL user $appName already exists';"
-
-      Write-Host ""
-      Write-Host "=== SQL User Setup: $appName ==="
-
-      if (Get-Command sqlcmd -ErrorAction SilentlyContinue) {
-        $token = az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv
-        sqlcmd -S "$sqlFqdn,1433" -d $database -G -P $token -l 60 -Q $sql
-        if ($LASTEXITCODE -eq 0) {
-          Write-Host "SQL user created successfully."
-        } else {
-          Write-Warning "sqlcmd exited with code $LASTEXITCODE — see manual step below."
-        }
-      } else {
-        Write-Host ""
-        Write-Host "sqlcmd not found. Run this once in Azure Cloud Shell (https://shell.azure.com):"
-        Write-Host ""
-        Write-Host "  sqlcmd -S $sqlFqdn -d $database -G -l 60 -Q `"$sql`""
-        Write-Host ""
-      }
-
 services:
   app:
     project: src/app

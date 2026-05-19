@@ -6,16 +6,6 @@ param location string = resourceGroup().location
 @description('Environment name used as a suffix for all resources')
 param environmentName string
 
-@description('Azure AD object ID for the SQL AAD administrator')
-param sqlAadAdminObjectId string = ''
-
-@description('SQL Server administrator login name')
-param sqlAdminLogin string = 'sqladmin'
-
-@description('SQL Server administrator password')
-@secure()
-param sqlAdminPassword string
-
 // ── Log Analytics (no dependencies) ───────────────────────────────────────
 module loganalytics 'modules/loganalytics.bicep' = {
   name: 'loganalytics'
@@ -44,15 +34,12 @@ module sql 'modules/sql.bicep' = {
   params: {
     environmentName: environmentName
     location: location
-    sqlAadAdminObjectId: sqlAadAdminObjectId
+    appServiceName: appservice.outputs.appServiceName
     appServicePrincipalId: appservice.outputs.principalId
-    sqlAdminLogin: sqlAdminLogin
-    sqlAdminPassword: sqlAdminPassword
   }
 }
 
 // ── App Service config update — injects SQL connection settings ────────────
-// Re-deploys the same App Service resource with the real SQL endpoint values.
 module appserviceConfig 'modules/appservice.bicep' = {
   name: 'appserviceConfig'
   params: {
@@ -60,8 +47,6 @@ module appserviceConfig 'modules/appservice.bicep' = {
     location: location
     sqlServerFqdn: sql.outputs.sqlServerFqdn
     databaseName: sql.outputs.databaseName
-    sqlAdminLogin: sqlAdminLogin
-    sqlAdminPassword: sqlAdminPassword
     logWorkspaceId: loganalytics.outputs.workspaceId
   }
 }
