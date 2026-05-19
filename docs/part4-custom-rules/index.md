@@ -187,18 +187,18 @@ Use a VPN exit node in a blocked country (e.g. Germany, DE) to confirm the 403 r
 
 ## Section 4 — View Custom Rule matches in WAF logs
 
+{: .tip }
+> WAF firewall logs are stored in the **`AGWFirewallLogs`** resource-specific table. See the [AGWFirewallLogs schema reference](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/agwfirewalllogs) for all available columns.
+
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
-| where policyMode_s == "Prevention"
-| where action_s == "Blocked"
-| where isnotempty(userDefinedRuleName_s)
-| project TimeGenerated, clientIp_s, requestUri_s, userDefinedRuleName_s, action_s
+AGWFirewallLogs
+| where Action == "Blocked"
+| where isnotempty(UserDefinedRuleName)
+| project TimeGenerated, ClientIp, RequestUri, UserDefinedRuleName, Action
 | order by TimeGenerated desc
 ```
 
-The `userDefinedRuleName_s` column will show `BlockAdminByIP`, `RateLimitLogin`, or `GeoFilter` — confirming which Custom Rule fired.
+The `UserDefinedRuleName` column will show `BlockAdminByIP`, `RateLimitLogin`, or `GeoFilter` — confirming which Custom Rule fired.
 
 {: .tip-title }
 > ## Custom Rule priority order matters

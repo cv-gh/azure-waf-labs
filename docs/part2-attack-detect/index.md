@@ -32,7 +32,7 @@ This is intentional for Lab 2 — you want to see *which* rules fire before you 
 
 ## Understanding True Positives
 
-A **True Positive (TP)** is a WAF rule match that correctly identifies a real attack. The WAF fired, and it was right to do so. In Detection Mode a TP shows up as `action_s == "Detected"` in the WAF logs.
+A **True Positive (TP)** is a WAF rule match that correctly identifies a real attack. The WAF fired, and it was right to do so. In Detection Mode a TP shows up as `Action == "Detected"` in the WAF logs.
 
 The opposite of a TP is a **False Positive (FP)** — a rule match that incorrectly flags legitimate traffic. You will encounter a deliberate FP in Lab 3.
 
@@ -99,12 +99,13 @@ Review the script before running it to understand every payload and which DRS 2.
 
 Open the Log Analytics workspace in the portal, select **Logs**, and run:
 
+{: .tip }
+> WAF firewall logs are stored in the **`AGWFirewallLogs`** resource-specific table. See the [AGWFirewallLogs schema reference](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/agwfirewalllogs) for all available columns.
+
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
-| where action_s == "Detected"
-| project TimeGenerated, clientIp_s, requestUri_s, ruleId_s, message_s
+AGWFirewallLogs
+| where Action == "Detected"
+| project TimeGenerated, ClientIp, RequestUri, RuleId, Message
 | order by TimeGenerated desc
 ```
 
@@ -117,15 +118,15 @@ AzureDiagnostics
 >
 > | Column | Meaning |
 > |--------|---------|
-> | `ruleId_s` | DRS 2.1 rule that matched |
-> | `requestUri_s` | The URI + query string that triggered the rule |
-> | `clientIp_s` | Your IP address |
-> | `message_s` | Human-readable rule description |
+> | `RuleId` | DRS 2.1 rule that matched |
+> | `RequestUri` | The URI + query string that triggered the rule |
+> | `ClientIp` | Your IP address |
+> | `Message` | Human-readable rule description |
 
 {: .warning-title }
 > ## Detection Mode means no blocking
 >
-> Every one of these requests reached your Vulnerable App. The `action_s == "Detected"` value confirms the WAF *saw* the attack but did *not* stop it. This is the expected and correct behaviour for Detection Mode.
+> Every one of these requests reached your Vulnerable App. The `Action == "Detected"` value confirms the WAF *saw* the attack but did *not* stop it. This is the expected and correct behaviour for Detection Mode.
 >
 > In **Lab 3** you will switch to Prevention Mode — after which these same payloads will return **HTTP 403 Forbidden** before they reach the application.
 

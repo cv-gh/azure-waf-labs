@@ -82,10 +82,11 @@ Expected output:
 3. In the left menu, select **Logs**.
 4. In the query editor, run the following to confirm the WAF diagnostic connection is working:
 
+{: .tip }
+> WAF firewall logs are stored in the **`AGWFirewallLogs`** resource-specific table. See the [AGWFirewallLogs schema reference](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/agwfirewalllogs) for all available columns.
+
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
+AGWFirewallLogs
 | take 10
 ```
 

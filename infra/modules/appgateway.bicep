@@ -214,6 +214,7 @@ resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   scope: appGateway
   properties: {
     workspaceId: logWorkspaceId
+    logAnalyticsDestinationType: 'Dedicated'
     logs: [
       {
         category: 'ApplicationGatewayAccessLog'

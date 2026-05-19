@@ -77,11 +77,9 @@ curl -v -H "User-Agent: masscan/1.3" "$APPGW_URL/api/products"
 Query the WAF logs to see Bot Manager detections:
 
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
-| where ruleSetType_s == "BotProtection"
-| project TimeGenerated, clientIp_s, requestUri_s, ruleId_s, message_s, action_s
+AGWFirewallLogs
+| where RuleSetType == "BotProtection"
+| project TimeGenerated, ClientIp, RequestUri, RuleId, Message, Action
 | order by TimeGenerated desc
 ```
 
@@ -91,14 +89,15 @@ AzureDiagnostics
 
 Open the Log Analytics workspace and run these queries to build operational insight into your WAF.
 
+{: .tip }
+> WAF firewall logs are stored in the **`AGWFirewallLogs`** resource-specific table. See the [AGWFirewallLogs schema reference](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/agwfirewalllogs) for all available columns.
+
 ### Blocked requests by rule ID (top 10)
 
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
-| where action_s == "Blocked"
-| summarize BlockCount = count() by ruleId_s
+AGWFirewallLogs
+| where Action == "Blocked"
+| summarize BlockCount = count() by RuleId
 | top 10 by BlockCount desc
 | render barchart
 ```
@@ -106,10 +105,8 @@ AzureDiagnostics
 ### Requests by client IP (top 20)
 
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
-| summarize RequestCount = count() by clientIp_s
+AGWFirewallLogs
+| summarize RequestCount = count() by ClientIp
 | top 20 by RequestCount desc
 ```
 
@@ -118,20 +115,16 @@ AzureDiagnostics
 This query uses Prevention Mode action values to track the blocked-vs-detected ratio. After Tuning in Lab 3, you should see `Detected` volume drop significantly.
 
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
-| where action_s in ("Blocked", "Detected")
-| summarize Count = count() by bin(TimeGenerated, 5m), action_s
+AGWFirewallLogs
+| where Action in ("Blocked", "Detected")
+| summarize Count = count() by bin(TimeGenerated, 5m), Action
 | render timechart
 ```
 
 ### WAF log volume by hour
 
 ```kusto
-AzureDiagnostics
-| where ResourceType == "APPLICATIONGATEWAYS"
-| where Category == "ApplicationGatewayFirewallLog"
+AGWFirewallLogs
 | summarize Events = count() by bin(TimeGenerated, 1h)
 | render columnchart
 ```
@@ -158,7 +151,7 @@ az monitor scheduled-query create \
   --name "WAF-HighBlockRate" \
   --resource-group $RESOURCE_GROUP \
   --scopes $LA_WORKSPACE_ID \
-  --condition-query "AzureDiagnostics | where ResourceType == 'APPLICATIONGATEWAYS' | where Category == 'ApplicationGatewayFirewallLog' | where action_s == 'Blocked' | summarize BlockCount = count()" \
+  --condition-query "AGWFirewallLogs | where Action == 'Blocked' | summarize BlockCount = count()" \
   --condition "count BlockCount > 10" \
   --window-size "PT5M" \
   --evaluation-frequency "PT5M" \
@@ -197,7 +190,7 @@ az sentinel onboarding-state create \
 
 ### Step 2 — Enable the Azure WAF data connector
 
-The Azure WAF connector imports `AzureDiagnostics` WAF log entries into Sentinel's unified security incident model.
+The Azure WAF connector imports `AGWFirewallLogs` WAF log entries into Sentinel's unified security incident model.
 
 ```bash
 az sentinel data-connector create \
@@ -209,7 +202,7 @@ az sentinel data-connector create \
 ```
 
 {: .tip }
-> The WAF connector ingests the same `AzureDiagnostics` table you queried in Section 3 — no new data pipelines needed. Sentinel adds incident correlation, threat intelligence enrichment, and workbook dashboards on top.
+> The WAF connector ingests the same `AGWFirewallLogs` table you queried in Section 3 — no new data pipelines needed. Sentinel adds incident correlation, threat intelligence enrichment, and workbook dashboards on top.
 
 ### Step 3 — Verify ingestion in Sentinel
 
@@ -219,10 +212,9 @@ In the Azure portal:
 2. Navigate to **Logs** and run:
 
 ```kusto
-AzureDiagnostics
-| where Category == "ApplicationGatewayFirewallLog"
-| where action_s == "Blocked"
-| project TimeGenerated, clientIp_s, ruleId_s, requestUri_s
+AGWFirewallLogs
+| where Action == "Blocked"
+| project TimeGenerated, ClientIp, RuleId, RequestUri
 | order by TimeGenerated desc
 | take 20
 ```

@@ -88,13 +88,16 @@ curl -v "$APPGW_URL/search?q=O'Brien"
 
 ### Step 4 — Confirm rule 942100 fired for the FP
 
+{: .tip }
+> WAF firewall logs are stored in the **`AGWFirewallLogs`** resource-specific table. See the [AGWFirewallLogs schema reference](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/agwfirewalllogs) for all available columns.
+
 ```kusto
-AzureDiagnostics
-| where ruleId_s == "942100"
-| project TimeGenerated, requestUri_s, details_message_s, action_s
+AGWFirewallLogs
+| where RuleId == "942100"
+| project TimeGenerated, RequestUri, DetailedMessage, Action
 ```
 
-Look for rows where `action_s == "Blocked"` and `requestUri_s` contains `O%27Brien` (URL-encoded apostrophe). This confirms rule 942100 is responsible.
+Look for rows where `Action == "Blocked"` and `RequestUri` contains `O%27Brien` (URL-encoded apostrophe). This confirms rule 942100 is responsible.
 
 ---
 
