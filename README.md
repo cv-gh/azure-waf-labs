@@ -31,7 +31,7 @@ The repo is designed as a guided progression:
 ## Repository layout
 
 ```text
-/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs
+.
 ├── azure.yaml                  # azd project definition
 ├── infra/                      # Bicep for App Gateway, WAF Policy, App Service, SQL, Log Analytics
 ├── src/app/                    # Flask app, secure variants, templates, Dockerfile
@@ -131,12 +131,12 @@ Expected:
 
 Read and follow the published walkthroughs in order:
 
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/part1-deploy-baseline/index.md`
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/part2-attack-detect/index.md`
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/part3-prevention-tuning/index.md`
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/part4-custom-rules/index.md`
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/part5-bot-observability/index.md`
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/part6-fix-code/index.md`
+- `docs/part1-deploy-baseline/index.md`
+- `docs/part2-attack-detect/index.md`
+- `docs/part3-prevention-tuning/index.md`
+- `docs/part4-custom-rules/index.md`
+- `docs/part5-bot-observability/index.md`
+- `docs/part6-fix-code/index.md`
 
 Typical flow:
 
@@ -174,7 +174,7 @@ Typical flow:
 
 ## Included scripts
 
-All scripts live under `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/scripts`.
+All scripts live under `scripts/`.
 
 | Script | Purpose |
 |---|---|
@@ -221,8 +221,8 @@ The default app in `src/app/app.py` and `src/app/db.py` is intentionally vulnera
 
 Secure drop-in replacements exist here:
 
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/src/app/app_secure.py`
-- `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/src/app/db_secure.py`
+- `src/app/app_secure.py`
+- `src/app/db_secure.py`
 
 Lab 6 swaps those secure files into place.
 
@@ -308,7 +308,7 @@ This removes the full resource group and is the intended cleanup path.
 
 ## Related docs
 
-- Docs home: `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/index.md`
-- Lab index: `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/labs.md`
-- Architecture and terminology: `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/CONTEXT.md`
-- ADRs: `/home/runner/work/azure-waf-labs/azure-waf-labs/cv-gh/azure-waf-labs/docs/adr/`
+- Docs home: `index.md`
+- Lab index: `labs.md`
+- Architecture and terminology: `CONTEXT.md`
+- ADRs: `docs/adr/`
