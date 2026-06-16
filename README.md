@@ -101,7 +101,7 @@ If you prefer manual exports:
 ```bash
 export APPGW_URL=$(azd env get-values | grep APPGW_URL | cut -d= -f2)
 export WAF_POLICY_NAME=$(azd env get-values | grep WAF_POLICY_NAME | cut -d= -f2)
-export RESOURCE_GROUP=$(azd env get-values | grep AZURE_RESOURCE_GROUP | cut -d= -f2)
+export AZURE_RESOURCE_GROUP=$(azd env get-values | grep AZURE_RESOURCE_GROUP | cut -d= -f2)
 ```
 
 ## Verify the deployment
